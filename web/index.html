@@ -636,6 +636,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
       <a href="#/" data-v="home">Overview</a>
       <a href="#/docs" data-v="docs">Docs</a>
       <a href="#/get" data-v="get">Download</a>
+      <a href="#/privacy" data-v="privacy">Privacy</a>
       <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">Source</a>
     </div>
   </nav>
@@ -1049,10 +1050,171 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   </div>
 </main>
 
+
+<!-- =========================================================== privacy == -->
+<main id="privacy" class="view">
+  <div class="shell">
+    <section style="border-top:none">
+      <div class="doc-grid">
+
+        <aside class="toc">
+          <p class="h">Contents</p>
+          <a href="#/privacy#short">The short version</a>
+          <a href="#/privacy#stored">What is stored</a>
+          <a href="#/privacy#traffic">Your traffic</a>
+          <a href="#/privacy#third">Third parties</a>
+          <a href="#/privacy#carrier">Your carrier</a>
+          <a href="#/privacy#rights">Your rights</a>
+          <a href="#/privacy#liability">Liability</a>
+        </aside>
+
+        <div class="prose">
+          <p class="eyebrow">Privacy &amp; terms · 8 September 2026</p>
+          <h2 id="short">The short version</h2>
+
+          <div class="claim">
+            <p>There is no server. Cell2Pc has no account, no telemetry and no analytics, and the phone and PC talk only to each other.</p>
+          </div>
+
+          <p>
+            That is not a promise about how carefully data is handled — it is a
+            statement about architecture. Nothing is transmitted to us because
+            there is nowhere to transmit it to. The desktop client is
+            <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">open source</a>,
+            so this is checkable rather than something you have to take on faith.
+          </p>
+
+          <h2 id="stored">What is stored, and where</h2>
+          <p>Everything below stays on your own devices. None of it leaves them.</p>
+
+          <table>
+            <tr><th>What</th><th>Where</th><th>Why</th></tr>
+            <tr><td>Pairing code and Wi-Fi passphrase</td><td>Phone, and the PC you paired</td><td>So you do not retype them every time</td></tr>
+            <tr><td>Daily and monthly byte totals</td><td>Phone</td><td>Data caps and the usage display</td></tr>
+            <tr><td>Session history</td><td>Phone</td><td>Start and end time, bytes moved, and the local address of the PC — not what was visited</td></tr>
+            <tr><td>Crash reports</td><td>PC only</td><td>Written to a local file so a crash leaves evidence. Never uploaded</td></tr>
+            <tr><td>Routing journal</td><td>PC only</td><td>Lets normal routing be restored if the app is interrupted</td></tr>
+          </table>
+
+          <p>
+            Uninstalling either app removes its own data. On the PC you may also
+            want to delete the folder named in the crash report path if you have
+            been sent one.
+          </p>
+
+          <div class="note">
+            <strong>What is deliberately not recorded:</strong> the sites you
+            visit, the addresses you connect to, DNS lookups, packet contents,
+            or anything identifying you or your devices beyond the local network
+            address of a paired PC.
+          </div>
+
+          <h2 id="traffic">Your traffic</h2>
+          <p>
+            Cell2Pc moves your PC's network traffic through your phone. That
+            traffic passes through the phone by design — it is what the product
+            does — but it is relayed, not inspected, stored or copied anywhere.
+          </p>
+          <p>
+            Between your PC and the phone, every frame is encrypted with AES-GCM
+            using a key derived from your pairing code. Beyond the phone, your
+            traffic is exactly as private as it would be if you had opened the
+            same connections on the phone itself — HTTPS stays HTTPS, and
+            anything unencrypted was already unencrypted.
+          </p>
+
+          <h2 id="third">Third parties</h2>
+          <p>There are three, and none of them receive anything about you from us.</p>
+          <ul>
+            <li><strong>Your carrier</strong> carries the traffic, as it would for any app on your phone.</li>
+            <li><strong>Wintun</strong>, the Windows network driver, is bundled and runs locally. It is a driver, not a service.</li>
+            <li><strong>GitHub</strong> hosts the downloads. Fetching a release is a request to GitHub and subject to their policy; the app itself never contacts them.</li>
+          </ul>
+          <p>
+            No advertising, no analytics, no trackers, no data brokers. Nothing
+            is sold or shared, because nothing is collected.
+          </p>
+
+          <h2 id="carrier">Your carrier, and what this software does not decide</h2>
+          <p>
+            Cell2Pc routes your PC's traffic through your mobile connection.
+            Whether that use is permitted is governed by your agreement with
+            your mobile operator, and by the law where you are. That is your
+            responsibility to check, not something this software can decide for
+            you.
+          </p>
+          <div class="note">
+            The traffic is architecturally ordinary app traffic — the phone
+            opens its own sockets rather than forwarding packets. That is a
+            description of how it works, <strong>not</strong> a claim that any
+            particular use complies with your operator's terms, and not advice
+            that it does.
+          </div>
+          <p>
+            You are also responsible for the data you move and the charges you
+            incur. The built-in cap exists to help with the second of those, but
+            it is a convenience, not a guarantee.
+          </p>
+
+          <h2 id="rights">Your rights</h2>
+          <p>
+            Data protection law gives you rights to access, correct, export and
+            erase personal data held about you. In our case those rights have
+            nothing to attach to: we hold no personal data about you, so there
+            is nothing to produce, correct or delete on request.
+          </p>
+          <p>
+            The data described above is on your devices and under your control.
+            You can inspect it, and uninstalling removes it. No request to us is
+            needed, and none would be useful.
+          </p>
+          <p>
+            If that ever changes, this page changes with it and the date at the
+            top moves. Continuing to use the software after a change means
+            accepting it; if you do not, uninstalling ends the arrangement
+            completely.
+          </p>
+
+          <h2 id="liability">Warranty and liability</h2>
+          <p>
+            The software is provided <strong>as is</strong>, without warranty of
+            any kind, express or implied, including the implied warranties of
+            merchantability, fitness for a particular purpose and
+            non-infringement.
+          </p>
+          <p>
+            To the fullest extent the law allows, we are not liable for any
+            damages arising from use of or inability to use the software —
+            including lost data, lost profits, business interruption, data
+            charges, or action taken by your mobile operator.
+          </p>
+          <div class="note">
+            <strong>Two things this cannot do, and does not try to.</strong>
+            Nothing here excludes liability for death or personal injury caused
+            by negligence, or for fraud — no agreement can. And where you deal
+            as a consumer you have statutory rights that cannot be signed away;
+            nothing here affects them. Anything above that a court finds
+            unenforceable is severed, and the rest continues to apply.
+          </div>
+
+          <h2>Contact</h2>
+          <p>
+            Questions about this page can go to
+            <a href="mailto:dev.emirbaycan@gmail.com">dev.emirbaycan@gmail.com</a>,
+            or to the
+            <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop/issues">issue tracker</a>.
+          </p>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</main>
+
 <footer>
   <div class="shell">
     <span class="mono">CELL2PC · 1.0.0</span>
-    <span>Check your carrier's terms before use.</span>
+    <span><a href="#/privacy">Privacy &amp; terms</a> · Check your carrier's terms before use.</span>
   </div>
 </footer>
 
@@ -1083,7 +1245,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
 /* Routing. Hash-based so the file works from disk with no rewrite rules. */
 (function () {
-  var views = ['home', 'docs', 'get'];
+  var views = ['home', 'docs', 'get', 'privacy'];
 
   function route() {
     var parts = location.hash.replace(/^#\/?/, '').split('#');
