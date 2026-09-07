@@ -14,54 +14,47 @@
 /* ---------------------------------------------------------------------------
    Cell2Pc
 
-   The visual language is borrowed from the instruments this thing belongs
-   beside: spectrum analysers, packet captures, throughput traces. Cold ground,
-   one warm carrier-signal accent, monospace as the display face because the
-   product speaks in byte counts.
+   Visual language borrowed from the instruments this belongs beside: spectrum
+   analysers, packet captures, throughput traces. Cold ground, one warm
+   carrier-signal accent, monospace as the display face.
 
-   Deliberately committed to a single dark world - an RF instrument does not
-   have a light mode - so no theme media queries, but every colour is painted
-   explicitly so the page holds on any host ground.
+   Committed to a single dark world - an RF instrument has no light mode - so
+   no theme queries, but every colour is painted explicitly from a token so the
+   page holds on any host ground.
+
+   Width: the shell runs wide because a signal display fills its screen. Only
+   running prose is measure-limited; panels, readouts and the scope use the
+   full width they are given.
 --------------------------------------------------------------------------- */
 
 :root {
-  /* Ground: near-black with a blue bias, the way a signal display reads. */
   --void:    #07090E;
   --panel:   #0E1219;
   --raised:  #151B25;
   --rule:    #1C2430;
+  --rule-lit:#2A3648;
 
   --signal:  #E8EDF5;
   --trace:   #7A879B;
   --faint:   #4A5568;
 
-  /* The carrier. Warm against a cold ground; deliberately not the green
-     that every dark landing page reaches for. */
   --ember:   #FF6B35;
   --ember-d: #C24A1F;
-
-  /* Reserved for live state only, so green means "running" and nothing else. */
   --live:    #4ADE80;
 
   --display: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --body:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  --measure: 68ch;
-  --gutter:  clamp(20px, 5vw, 48px);
-  --max:     1140px;
+  --measure: 66ch;
+  --gutter:  clamp(20px, 4vw, 56px);
+  --max:     1680px;
+
+  --ease:    cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
 
 body {
   margin: 0;
@@ -72,6 +65,25 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
+}
+
+/* Ambient carrier wash behind everything. Slow enough to read as atmosphere
+   rather than as an effect competing with the content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  background:
+    radial-gradient(58% 44% at 18% 8%,  rgba(255,107,53,0.09), transparent 62%),
+    radial-gradient(48% 40% at 88% 72%, rgba(74,222,128,0.05), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  animation: drift 32s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to   { transform: translate3d(2%, 2%, 0) scale(1.08); }
 }
 
 a { color: var(--ember); text-decoration: none; }
@@ -79,57 +91,37 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible {
   outline: 2px solid var(--ember);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
-/* --------------------------------------------------------------- shell -- */
-
-.shell { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
-
-/* The spine: a measurement rule running the length of the page, ticked like a
-   captured trace. It is the page's structure made visible, not decoration -
-   each tick marks a section boundary. */
-.spine {
-  position: fixed;
-  left: max(calc((100vw - var(--max)) / 2 + 18px), 18px);
-  top: 0; bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg,
-    transparent, var(--rule) 8%, var(--rule) 92%, transparent);
+.shell {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  position: relative;
   z-index: 1;
-  pointer-events: none;
 }
-.spine::before {
-  content: "";
-  position: absolute;
-  left: -3px; top: 12%;
-  width: 7px; height: 7px;
-  background: var(--ember);
-  box-shadow: 0 0 14px var(--ember);
-}
-@media (max-width: 900px) { .spine { display: none; } }
 
 /* ----------------------------------------------------------------- nav -- */
 
 header {
   position: sticky; top: 0; z-index: 40;
-  background: color-mix(in srgb, var(--void) 88%, transparent);
-  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--void) 86%, transparent);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--rule);
 }
 nav {
   max-width: var(--max);
   margin: 0 auto;
-  padding: 16px var(--gutter);
+  padding: 15px var(--gutter);
   display: flex;
   align-items: center;
-  gap: clamp(16px, 4vw, 36px);
+  gap: clamp(16px, 4vw, 40px);
 }
 .mark {
   font-family: var(--display);
   font-weight: 700;
-  font-size: 17px;
-  letter-spacing: -0.5px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
   color: var(--signal);
   display: flex;
   align-items: center;
@@ -143,35 +135,64 @@ nav {
   animation: pulse 2.4s ease-in-out infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 60%, transparent); }
-  50%      { opacity: 0.5; box-shadow: 0 0 0 5px transparent; }
+  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 rgba(74,222,128,0.55); }
+  50%      { opacity: 0.45; box-shadow: 0 0 0 6px rgba(74,222,128,0); }
 }
-.links { margin-left: auto; display: flex; gap: clamp(14px, 3vw, 30px); align-items: center; }
+
+.links { margin-left: auto; display: flex; gap: clamp(14px, 2.5vw, 32px); align-items: center; }
 .links a {
   color: var(--trace);
-  font-size: 13px;
+  font-size: 12.5px;
   font-family: var(--display);
-  letter-spacing: 0.2px;
-  padding: 4px 0;
-  border-bottom: 1px solid transparent;
-  transition: color 0.18s, border-color 0.18s;
+  letter-spacing: 0.4px;
+  padding: 5px 0;
+  position: relative;
+  transition: color 0.2s var(--ease);
 }
 .links a:hover { color: var(--signal); text-decoration: none; }
-.links a.on { color: var(--ember); border-bottom-color: var(--ember); }
+/* Underline that draws in from the left rather than appearing. */
+.links a::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  height: 1px; width: 100%;
+  background: var(--ember);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease);
+}
+.links a:hover::after { transform: scaleX(1); }
+.links a.on { color: var(--ember); }
+.links a.on::after { transform: scaleX(1); }
 
 /* --------------------------------------------------------------- views -- */
 
 .view { display: none; }
-.view.on { display: block; }
+.view.on { display: block; animation: enter 0.5s var(--ease); }
+@keyframes enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* ---------------------------------------------------------------- hero -- */
 
-.hero { padding: clamp(56px, 9vw, 104px) 0 clamp(40px, 6vw, 72px); }
+/* Two columns on a wide screen: the claim and the instrument side by side, so
+   the mechanism is visible in the same glance as the sentence describing it. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+  padding: clamp(44px, 6vw, 88px) 0;
+}
+@media (max-width: 1080px) {
+  .hero { grid-template-columns: 1fr; gap: 40px; }
+}
 
 .eyebrow {
   font-family: var(--display);
-  font-size: 11px;
-  letter-spacing: 2.4px;
+  font-size: 10.5px;
+  letter-spacing: 2.6px;
   text-transform: uppercase;
   color: var(--ember);
   margin: 0 0 22px;
@@ -184,128 +205,174 @@ nav {
   flex: 1;
   height: 1px;
   background: linear-gradient(90deg, var(--ember-d), transparent);
-  max-width: 180px;
+  max-width: 160px;
+  transform-origin: left;
+  animation: sweep 1s var(--ease) 0.2s both;
 }
+@keyframes sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 h1 {
   font-family: var(--display);
   font-weight: 700;
-  font-size: clamp(32px, 6.6vw, 66px);
-  line-height: 1.04;
-  letter-spacing: -2.5px;
-  margin: 0 0 26px;
+  font-size: clamp(34px, 4.6vw, 62px);
+  line-height: 1.02;
+  letter-spacing: -2.6px;
+  margin: 0 0 24px;
   text-wrap: balance;
-  max-width: 16ch;
 }
 h1 em { font-style: normal; color: var(--ember); }
 
+/* Headline resolves word by word, like a signal locking on. */
+h1 .w {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(6px);
+  animation: lock 0.75s var(--ease) forwards;
+}
+@keyframes lock {
+  to { opacity: 1; filter: blur(0); }
+}
+
 .lede {
-  font-size: clamp(16px, 2vw, 19px);
+  font-size: clamp(15.5px, 1.2vw, 18px);
   color: var(--trace);
-  max-width: 56ch;
-  margin: 0 0 36px;
+  max-width: 54ch;
+  margin: 0 0 32px;
   line-height: 1.7;
+  animation: rise 0.7s var(--ease) 0.55s both;
 }
 .lede strong { color: var(--signal); font-weight: 500; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
 
-.actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.actions {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  animation: rise 0.7s var(--ease) 0.68s both;
+}
 
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 9px;
   font-family: var(--display);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.3px;
-  padding: 13px 24px;
+  letter-spacing: 0.4px;
+  padding: 13px 26px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
 }
-.btn:hover { text-decoration: none; transform: translateY(-1px); }
-.btn-solid  { background: var(--ember); color: var(--void); }
-.btn-solid:hover { background: #FF7F4F; }
-.btn-line   { border-color: var(--rule); color: var(--signal); background: transparent; }
+.btn:hover { text-decoration: none; transform: translateY(-2px); }
+.btn-solid { background: var(--ember); color: var(--void); }
+/* Sheen crossing the button on hover, not a colour swap. */
+.btn-solid::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.42) 50%, transparent 65%);
+  transform: translateX(-110%);
+  transition: transform 0.6s var(--ease);
+}
+.btn-solid:hover::after { transform: translateX(110%); }
+.btn-line { border-color: var(--rule-lit); color: var(--signal); }
 .btn-line:hover { border-color: var(--ember); color: var(--ember); }
 
-/* -------------------------------------------------------------- canvas -- */
+/* -------------------------------------------------------------- scope -- */
 
-/* The mechanism, shown before it is explained: packets crossing the link at
-   the throughput actually measured. */
 .scope {
-  margin: clamp(40px, 6vw, 68px) 0 0;
   border: 1px solid var(--rule);
-  background:
-    linear-gradient(var(--panel), var(--panel)) padding-box,
-    repeating-linear-gradient(0deg, transparent, transparent 39px,
-      color-mix(in srgb, var(--rule) 55%, transparent) 39px,
-      color-mix(in srgb, var(--rule) 55%, transparent) 40px);
+  background: var(--panel);
+  position: relative;
+  overflow: hidden;
+  animation: rise 0.8s var(--ease) 0.4s both;
 }
+/* Corner registration marks, the way an instrument frames its display. */
+.scope::before, .scope::after {
+  content: "";
+  position: absolute;
+  width: 11px; height: 11px;
+  border: 1px solid var(--ember);
+  opacity: 0.5;
+}
+.scope::before { top: 7px; left: 7px; border-right: none; border-bottom: none; }
+.scope::after  { bottom: 7px; right: 7px; border-left: none; border-top: none; }
+
 .scope-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 12px 18px;
+  padding: 13px 20px;
   border-bottom: 1px solid var(--rule);
   font-family: var(--display);
-  font-size: 11px;
-  letter-spacing: 1.4px;
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--faint);
   flex-wrap: wrap;
   gap: 8px;
 }
-.scope-head .rate { color: var(--live); letter-spacing: 0.6px; }
-#flow { display: block; width: 100%; height: 190px; }
+.scope-head .rate { color: var(--live); letter-spacing: 0.5px; }
+#flow { display: block; width: 100%; height: clamp(220px, 26vw, 320px); }
 .scope-foot {
-  padding: 13px 18px;
+  padding: 14px 20px;
   border-top: 1px solid var(--rule);
   font-size: 13px;
   color: var(--faint);
+  margin: 0;
   line-height: 1.6;
 }
 .scope-foot b { color: var(--trace); font-weight: 500; }
 
 /* ------------------------------------------------------------- content -- */
 
-section { padding: clamp(56px, 8vw, 96px) 0; border-top: 1px solid var(--rule); }
-section:first-of-type { border-top: none; }
+section { padding: clamp(56px, 7vw, 104px) 0; border-top: 1px solid var(--rule); }
 
 h2 {
   font-family: var(--display);
   font-weight: 700;
-  font-size: clamp(23px, 3.4vw, 34px);
-  letter-spacing: -1.2px;
-  line-height: 1.15;
-  margin: 0 0 16px;
+  font-size: clamp(24px, 2.7vw, 38px);
+  letter-spacing: -1.4px;
+  line-height: 1.12;
+  margin: 0 0 18px;
   text-wrap: balance;
 }
-h3 {
-  font-family: var(--display);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  margin: 0 0 8px;
-}
+h3 { font-family: var(--display); font-size: 15px; font-weight: 700; letter-spacing: -0.3px; margin: 0 0 8px; }
 p { max-width: var(--measure); margin: 0 0 16px; color: var(--trace); }
-p.tight { max-width: 60ch; }
 strong { color: var(--signal); font-weight: 500; }
 
-/* Not every block is a card. The contrast panel is spent once, on the claim
-   that carries the product. */
+/* Sections lift as they arrive - from a visible state, never parked hidden. */
+.lift { animation: lift-in 0.7s var(--ease) both; }
+@keyframes lift-in {
+  from { opacity: 0.001; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Split layout so wide screens carry two columns of argument, not one narrow
+   ribbon down the middle. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: clamp(28px, 5vw, 88px);
+  align-items: start;
+}
+@media (max-width: 940px) { .split { grid-template-columns: 1fr; gap: 28px; } }
+
 .claim {
   border-left: 2px solid var(--ember);
-  padding: 4px 0 4px 24px;
-  margin: 32px 0;
+  padding: 6px 0 6px 26px;
+  margin: 0 0 26px;
 }
-.claim p { color: var(--signal); font-size: 17px; max-width: 58ch; margin: 0; }
+.claim p { color: var(--signal); font-size: clamp(17px, 1.4vw, 21px); max-width: 46ch; margin: 0; line-height: 1.5; }
 
 .note {
   border: 1px solid var(--rule);
   background: var(--panel);
-  padding: 18px 20px;
-  margin: 28px 0;
+  padding: 20px 22px;
+  margin: 26px 0;
   font-size: 14px;
   color: var(--trace);
   max-width: var(--measure);
@@ -314,18 +381,18 @@ strong { color: var(--signal); font-weight: 500; }
 
 /* ------------------------------------------------------------ features -- */
 
-/* A definition list, not a card grid: these are terms with explanations, and
-   the rule between them is enough separation. */
-.terms { display: grid; gap: 0; margin-top: 36px; }
+.terms { display: grid; gap: 0; margin: 0; }
 .term {
   display: grid;
-  grid-template-columns: 148px 1fr;
-  gap: clamp(16px, 4vw, 40px);
-  padding: 22px 0;
+  grid-template-columns: 156px 1fr;
+  gap: clamp(16px, 3vw, 44px);
+  padding: 24px 0;
   border-top: 1px solid var(--rule);
   align-items: start;
+  transition: background 0.3s var(--ease), padding-left 0.3s var(--ease);
 }
 .term:last-child { border-bottom: 1px solid var(--rule); }
+.term:hover { background: var(--panel); padding-left: 14px; }
 .term dt {
   font-family: var(--display);
   font-size: 13px;
@@ -334,57 +401,60 @@ strong { color: var(--signal); font-weight: 500; }
   letter-spacing: -0.2px;
   padding-top: 2px;
 }
-.term dd { margin: 0; color: var(--trace); font-size: 15px; max-width: 62ch; }
+.term dd { margin: 0; color: var(--trace); font-size: 15px; max-width: 68ch; }
 @media (max-width: 640px) {
   .term { grid-template-columns: 1fr; gap: 6px; }
+  .term:hover { padding-left: 10px; }
 }
 
 /* --------------------------------------------------------------- stats -- */
 
 .readout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   border: 1px solid var(--rule);
-  margin-top: 32px;
+  margin-top: 34px;
 }
 .cell {
-  padding: 22px 20px;
+  padding: 26px 24px;
   border-right: 1px solid var(--rule);
+  transition: background 0.3s var(--ease);
 }
 .cell:last-child { border-right: none; }
-@media (max-width: 620px) {
+.cell:hover { background: var(--panel); }
+@media (max-width: 680px) {
   .cell { border-right: none; border-bottom: 1px solid var(--rule); }
   .cell:last-child { border-bottom: none; }
 }
 .cell .v {
   font-family: var(--display);
-  font-size: 30px;
+  font-size: clamp(28px, 2.6vw, 38px);
   font-weight: 700;
-  letter-spacing: -1.5px;
+  letter-spacing: -1.8px;
   color: var(--signal);
   line-height: 1;
 }
-.cell .v .u { font-size: 13px; color: var(--faint); letter-spacing: 0; margin-left: 4px; }
+.cell .v .u { font-size: 13px; color: var(--faint); letter-spacing: 0; margin-left: 5px; }
 .cell .k {
   font-family: var(--display);
   font-size: 10px;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.7px;
   text-transform: uppercase;
   color: var(--faint);
-  margin-top: 9px;
+  margin-top: 10px;
 }
 
 /* ---------------------------------------------------------------- docs -- */
 
-.doc-grid { display: grid; grid-template-columns: 190px 1fr; gap: clamp(28px, 6vw, 64px); align-items: start; }
-@media (max-width: 880px) { .doc-grid { grid-template-columns: 1fr; } }
+.doc-grid { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: clamp(28px, 5vw, 76px); align-items: start; }
+@media (max-width: 900px) { .doc-grid { grid-template-columns: 1fr; } }
 
-.toc { position: sticky; top: 84px; }
-@media (max-width: 880px) { .toc { position: static; } }
+.toc { position: sticky; top: 82px; }
+@media (max-width: 900px) { .toc { position: static; } }
 .toc .h {
   font-family: var(--display);
   font-size: 10px;
-  letter-spacing: 1.8px;
+  letter-spacing: 1.9px;
   text-transform: uppercase;
   color: var(--faint);
   margin: 0 0 14px;
@@ -393,14 +463,15 @@ strong { color: var(--signal); font-weight: 500; }
   display: block;
   color: var(--trace);
   font-size: 14px;
-  padding: 6px 0 6px 14px;
+  padding: 7px 0 7px 16px;
   border-left: 1px solid var(--rule);
-  transition: color 0.16s, border-color 0.16s;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease), padding-left 0.2s var(--ease);
 }
-.toc a:hover { color: var(--ember); border-left-color: var(--ember); text-decoration: none; }
+.toc a:hover { color: var(--ember); border-left-color: var(--ember); padding-left: 22px; text-decoration: none; }
 
-.prose h2 { margin-top: 8px; scroll-margin-top: 90px; }
-.prose h2 + p { margin-top: 0; }
+.prose { max-width: 860px; }
+.prose h2 { margin-top: 0; scroll-margin-top: 88px; }
+.prose h2:not(:first-child) { margin-top: 56px; }
 .prose h3 { margin-top: 34px; }
 .prose ol, .prose ul { color: var(--trace); max-width: var(--measure); padding-left: 20px; }
 .prose li { margin-bottom: 8px; }
@@ -416,59 +487,61 @@ code {
 pre {
   font-family: var(--display);
   font-size: 12.5px;
-  line-height: 1.75;
+  line-height: 1.8;
   background: var(--panel);
   border: 1px solid var(--rule);
-  padding: 18px;
+  padding: 20px;
   overflow-x: auto;
-  margin: 18px 0;
+  margin: 20px 0;
   color: var(--trace);
-  max-width: var(--measure);
 }
 pre code { background: none; border: none; padding: 0; color: inherit; }
 pre .c { color: var(--faint); }
 
-table { border-collapse: collapse; width: 100%; max-width: var(--measure); margin: 20px 0; font-size: 14px; }
-th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--rule); }
-th {
-  font-family: var(--display);
-  font-size: 10px;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  color: var(--faint);
-  font-weight: 400;
-}
+table { border-collapse: collapse; width: 100%; max-width: var(--measure); margin: 22px 0; font-size: 14px; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint); font-weight: 400; }
 td { color: var(--trace); }
 td:first-child { color: var(--signal); }
 
 /* ------------------------------------------------------------ download -- */
 
-.platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); border: 1px solid var(--rule); margin-top: 36px; }
-.plat { padding: 26px 24px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; }
+.platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); border: 1px solid var(--rule); margin-top: 36px; }
+.plat {
+  padding: 30px 28px;
+  border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 10px;
+  transition: background 0.3s var(--ease);
+}
 .plat:last-child { border-right: none; }
-@media (max-width: 720px) {
+.plat:hover { background: var(--panel); }
+@media (max-width: 860px) {
   .plat { border-right: none; border-bottom: 1px solid var(--rule); }
   .plat:last-child { border-bottom: none; }
 }
-.plat .os { font-family: var(--display); font-size: 15px; font-weight: 700; }
-.plat .req { font-size: 13px; color: var(--faint); flex: 1; }
-.plat .btn { margin-top: 12px; justify-content: center; }
+.plat .os { font-family: var(--display); font-size: 16px; font-weight: 700; }
+.plat .req { font-size: 13.5px; color: var(--faint); flex: 1; line-height: 1.6; }
+.plat .btn { margin-top: 14px; justify-content: center; }
 
 /* -------------------------------------------------------------- footer -- */
 
-footer {
-  border-top: 1px solid var(--rule);
-  padding: 30px 0;
-  font-size: 13px;
-  color: var(--faint);
-}
+footer { border-top: 1px solid var(--rule); padding: 30px 0; font-size: 13px; color: var(--faint); position: relative; z-index: 1; }
 footer .shell { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
-footer .mono { font-family: var(--display); font-size: 12px; }
+footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5px; }
+
+/* Motion is atmosphere here, not information - all of it can go. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  h1 .w { opacity: 1; filter: none; }
+}
 </style>
 </head>
 <body>
-
-<div class="spine" aria-hidden="true"></div>
 
 <header>
   <nav>
@@ -487,95 +560,107 @@ footer .mono { font-family: var(--display); font-size: 12px; }
   <div class="shell">
 
     <div class="hero">
-      <p class="eyebrow">Android → Wi-Fi Direct → your PC</p>
-      <h1>Your PC on the phone's <em>mobile data</em></h1>
-      <p class="lede">
-        Not a hotspot. Your PC's packets stop at the phone, which opens
-        <strong>its own connections</strong> on the cellular interface and
-        copies the bytes across. Nothing forwards a packet, so nothing on the
-        network sees a second device.
-      </p>
-      <div class="actions">
-        <a href="#/get" class="btn btn-solid">Download</a>
-        <a href="#/docs" class="btn btn-line">How it works</a>
+      <div>
+        <p class="eyebrow">Android → Wi-Fi Direct → your PC</p>
+        <h1 id="headline">Your PC on the phone's <em>mobile data</em></h1>
+        <p class="lede">
+          Not a hotspot. Your PC's packets stop at the phone, which opens
+          <strong>its own connections</strong> on the cellular interface and
+          copies the bytes across. Nothing forwards a packet, so nothing on the
+          network sees a second device.
+        </p>
+        <div class="actions">
+          <a href="#/get" class="btn btn-solid">Download</a>
+          <a href="#/docs" class="btn btn-line">How it works</a>
+        </div>
       </div>
-    </div>
 
-    <div class="scope">
-      <div class="scope-head">
-        <span>Link · 5 GHz Wi-Fi Direct</span>
-        <span class="rate" id="rate">156.0 Mbps ↓ · 101.0 Mbps ↑ · 1.7 ms</span>
-      </div>
-      <canvas id="flow" width="1100" height="190" aria-label="Packets crossing from the PC through the phone to the cellular network"></canvas>
-      <p class="scope-foot">
-        Measured on a <b>Galaxy A53 over LTE</b>. The link runs well above the
-        cellular connection it carries, which is the number that matters — the
-        tunnel is not the bottleneck.
-      </p>
-    </div>
-
-    <section>
-      <h2>Why it isn't tethering</h2>
-      <p>
-        A hotspot hands your PC to the carrier's tethering stack. That stack is
-        the thing that gets metered separately, throttled, or refused outright.
-      </p>
-      <p>
-        Cell2Pc never touches it. The phone reads your PC's TCP and UDP streams
-        and opens ordinary Android sockets to the same destinations, bound to
-        the cellular interface. It copies bytes between the two.
-      </p>
-      <div class="claim">
-        <p>
-          What leaves the phone is one app making ordinary connections. There is
-          no forwarded packet, because at the IP layer there is no second device.
+      <div class="scope">
+        <div class="scope-head">
+          <span>Link · 5 GHz Wi-Fi Direct</span>
+          <span class="rate"><span id="dn">156.0</span> Mbps ↓ · <span id="up">101.0</span> Mbps ↑ · 1.7 ms</span>
+        </div>
+        <canvas id="flow" width="1200" height="300" aria-label="Packets crossing from the PC through the phone to the cellular network"></canvas>
+        <p class="scope-foot">
+          Measured on a <b>Galaxy A53 over LTE</b>. The link runs well above the
+          cellular connection it carries — the tunnel is not the bottleneck.
         </p>
       </div>
-      <div class="note">
-        <strong>Stated plainly:</strong> this makes the traffic architecturally
-        identical to app traffic. It is not a claim of undetectability by other
-        means, and there is no TTL rewriting or fingerprint spoofing anywhere in
-        it. Whether you may use it is between you and your carrier's terms.
+    </div>
+
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>Why it isn't tethering</h2>
+          <div class="claim">
+            <p>What leaves the phone is one app making ordinary connections. There is no forwarded packet, because at the IP layer there is no second device.</p>
+          </div>
+        </div>
+        <div>
+          <p>
+            A hotspot hands your PC to the carrier's tethering stack. That stack
+            is the thing that gets metered separately, throttled, or refused
+            outright.
+          </p>
+          <p>
+            Cell2Pc never touches it. The phone reads your PC's TCP and UDP
+            streams and opens ordinary Android sockets to the same destinations,
+            bound to the cellular interface, then copies bytes between the two.
+          </p>
+          <div class="note">
+            <strong>Stated plainly:</strong> this makes the traffic
+            architecturally identical to app traffic. It is not a claim of
+            undetectability by other means, and there is no TTL rewriting or
+            fingerprint spoofing anywhere in it. Whether you may use it is
+            between you and your carrier's terms.
+          </div>
+        </div>
       </div>
     </section>
 
-    <section>
-      <h2>What it does</h2>
-      <dl class="terms">
-        <div class="term">
-          <dt>Every app</dt>
-          <dd>A real virtual network adapter, so browsers, Steam, Windows Update and games work untouched. No proxy settings, nothing per-application.</dd>
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>What it does</h2>
+          <p>Six things that took the longest to get right.</p>
         </div>
-        <div class="term">
-          <dt>Four links</dt>
-          <dd>Traffic is spread across four parallel connections. One lost Wi-Fi frame stalls a quarter of it instead of freezing everything — the failure that makes older tools feel unreliable.</dd>
-        </div>
-        <div class="term">
-          <dt>Reconnects</dt>
-          <dd>When the link drops the adapter stays up and the tunnel rebuilds underneath it, so applications keep their connections rather than seeing the network vanish.</dd>
-        </div>
-        <div class="term">
-          <dt>Data caps</dt>
-          <dd>Usage tracked per day and per billing cycle, anchored on your carrier's cycle day rather than the calendar month. At the cap it refuses new connections instead of cutting you off.</dd>
-        </div>
-        <div class="term">
-          <dt>Encrypted</dt>
-          <dd>A pairing code authorises each PC and keys AES-GCM on every frame. Joining the Wi-Fi is not enough to use the connection or read it.</dd>
-        </div>
-        <div class="term">
-          <dt>Four PCs</dt>
-          <dd>Several machines share one phone, each with its own streams, NAT table and DNS cache.</dd>
-        </div>
-      </dl>
+        <dl class="terms">
+          <div class="term">
+            <dt>Every app</dt>
+            <dd>A real virtual network adapter, so browsers, Steam, Windows Update and games work untouched. No proxy settings, nothing per-application.</dd>
+          </div>
+          <div class="term">
+            <dt>Four links</dt>
+            <dd>Traffic spread across four parallel connections. One lost Wi-Fi frame stalls a quarter of it instead of freezing everything — the failure that makes older tools feel unreliable.</dd>
+          </div>
+          <div class="term">
+            <dt>Reconnects</dt>
+            <dd>When the link drops the adapter stays up and the tunnel rebuilds underneath it, so applications keep their connections rather than watching the network vanish.</dd>
+          </div>
+          <div class="term">
+            <dt>Data caps</dt>
+            <dd>Usage tracked per day and per billing cycle, anchored on your carrier's cycle day rather than the calendar month. At the cap it refuses new connections instead of cutting you off mid-download.</dd>
+          </div>
+          <div class="term">
+            <dt>Encrypted</dt>
+            <dd>A pairing code authorises each PC and keys AES-GCM on every frame. Joining the Wi-Fi is not enough to use the connection, or to read it.</dd>
+          </div>
+          <div class="term">
+            <dt>Four PCs</dt>
+            <dd>Several machines share one phone, each with its own streams, NAT table and DNS cache.</dd>
+          </div>
+        </dl>
+      </div>
     </section>
 
-    <section>
+    <section class="lift">
       <h2>Measured, not estimated</h2>
-      <p class="tight">The link and the tunnel were timed separately, so a slow result could be attributed to one or the other rather than guessed at.</p>
+      <p>The link and the tunnel were timed separately, so a slow result could be attributed to one or the other rather than guessed at.</p>
       <div class="readout">
         <div class="cell"><div class="v">156<span class="u">Mbps</span></div><div class="k">Down</div></div>
         <div class="cell"><div class="v">101<span class="u">Mbps</span></div><div class="k">Up</div></div>
         <div class="cell"><div class="v">1.7<span class="u">ms</span></div><div class="k">Latency</div></div>
+        <div class="cell"><div class="v">4<span class="u">links</span></div><div class="k">Parallel</div></div>
         <div class="cell"><div class="v">77</div><div class="k">Tests passing</div></div>
       </div>
     </section>
@@ -698,7 +783,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
     <section style="border-top:none">
       <p class="eyebrow">Version 1.0.0</p>
       <h2>Download</h2>
-      <p class="tight">You need the phone app and one desktop app. They work as a pair.</p>
+      <p>You need the phone app and one desktop app. They work as a pair.</p>
 
       <div class="platforms">
         <div class="plat">
@@ -720,8 +805,8 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
       <div class="note">
         <strong>The Windows installer is not code-signed.</strong> SmartScreen
-        will say it does not recognise it — that is a statement about the
-        certificate, not the software. Choose <strong>More info</strong>, then
+        will say it does not recognise it — a statement about the certificate,
+        not the software. Choose <strong>More info</strong>, then
         <strong>Run anyway</strong>.
       </div>
 
@@ -744,16 +829,36 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 </footer>
 
 <script>
-/* ---------------------------------------------------------------------------
-   Routing. Hash-based so the file works opened straight from disk and needs no
-   server rewrite rules; deep links like #/docs#sec still resolve to a section.
---------------------------------------------------------------------------- */
+/* Headline resolves word by word, like a receiver locking onto a signal. */
+(function () {
+  var h = document.getElementById('headline');
+  if (!h || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var walk = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+  var texts = [];
+  while (walk.nextNode()) texts.push(walk.currentNode);
+
+  var i = 0;
+  texts.forEach(function (node) {
+    var frag = document.createDocumentFragment();
+    node.nodeValue.split(/(\s+)/).forEach(function (part) {
+      if (!part.trim()) { frag.appendChild(document.createTextNode(part)); return; }
+      var span = document.createElement('span');
+      span.className = 'w';
+      span.textContent = part;
+      span.style.animationDelay = (0.06 * i++) + 's';
+      frag.appendChild(span);
+    });
+    node.parentNode.replaceChild(frag, node);
+  });
+})();
+
+/* Routing. Hash-based so the file works from disk with no rewrite rules. */
 (function () {
   var views = ['home', 'docs', 'get'];
 
   function route() {
-    var raw = location.hash.replace(/^#\/?/, '');
-    var parts = raw.split('#');
+    var parts = location.hash.replace(/^#\/?/, '').split('#');
     var name = views.indexOf(parts[0]) >= 0 ? parts[0] : 'home';
 
     views.forEach(function (v) {
@@ -764,41 +869,60 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
     });
 
     if (parts[1]) {
-      var target = document.getElementById(parts[1]);
-      if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      var t = document.getElementById(parts[1]);
+      if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     }
-    window.scrollTo(0, 0);
+    scrollTo(0, 0);
   }
 
   addEventListener('hashchange', route);
   route();
 })();
 
+/* Sections lift in as they arrive. They start visible and animate from a
+   resting state, so nothing is stranded invisible if the observer never runs. */
+(function () {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.style.animationPlayState = 'running';
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.lift').forEach(function (el) {
+    el.style.animationPlayState = 'paused';
+    io.observe(el);
+  });
+})();
+
 /* ---------------------------------------------------------------------------
    The link, drawn.
 
-   Packets crossing PC → phone → carrier, with the ratio of dots per direction
-   taken from the measured 156/101 Mbps. Canvas rather than SVG because these
-   are hundreds of short-lived particles, which is what canvas is for.
+   Packets crossing PC → phone → carrier, with the ratio per direction taken
+   from the measured 156/101 Mbps, plus a slow throughput trace along the
+   bottom. Canvas because these are hundreds of short-lived particles.
 --------------------------------------------------------------------------- */
 (function () {
   var canvas = document.getElementById('flow');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
-
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var COLD = '#1C2430', EMBER = '#FF6B35', LIVE = '#4ADE80', TRACE = '#7A879B', FAINT = '#4A5568';
+  var COLD = '#1C2430', EMBER = '#FF6B35', LIVE = '#4ADE80',
+      TRACE = '#7A879B', FAINT = '#4A5568', VOID = '#07090E';
 
   var nodes = [
-    { x: 0.10, label: 'YOUR PC',  sub: 'any app' },
-    { x: 0.40, label: 'PHONE',    sub: 'Cell2Pc' },
-    { x: 0.70, label: 'CARRIER',  sub: 'LTE / 5G' },
-    { x: 0.94, label: 'INTERNET', sub: '' }
+    { x: 0.09, label: 'YOUR PC',  sub: 'any app' },
+    { x: 0.38, label: 'PHONE',    sub: 'Cell2Pc' },
+    { x: 0.68, label: 'CARRIER',  sub: 'LTE / 5G' },
+    { x: 0.93, label: 'INTERNET', sub: '' }
   ];
 
-  var packets = [];
-  var w = 0, h = 0, dpr = 1;
+  var packets = [], history = [], w = 0, h = 0, dpr = 1, t0 = 0;
 
   function size() {
     dpr = Math.min(devicePixelRatio || 1, 2);
@@ -810,37 +934,44 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   }
 
   function spawn() {
-    // Roughly 156:101 down to up, so the picture matches the measurement.
-    var down = Math.random() < 0.607;
+    // 156:101 down to up, so the picture matches the measurement.
     packets.push({
       t: 0,
-      down: down,
-      speed: 0.0026 + Math.random() * 0.0022,
-      lane: (Math.random() - 0.5) * 16,
-      size: 1.4 + Math.random() * 1.5
+      down: Math.random() < 0.607,
+      speed: 0.0028 + Math.random() * 0.0024,
+      lane: (Math.random() - 0.5) * 22,
+      size: 1.3 + Math.random() * 1.6
     });
   }
 
-  function draw() {
+  function draw(now) {
     ctx.clearRect(0, 0, w, h);
-    var mid = h / 2;
+    var mid = h * 0.42;
 
-    // The link itself.
-    ctx.strokeStyle = COLD;
+    // Faint grid, the way an instrument rules its display.
+    ctx.strokeStyle = 'rgba(28,36,48,0.55)';
     ctx.lineWidth = 1;
+    for (var gy = 0; gy < h; gy += 40) {
+      ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(w, gy + 0.5); ctx.stroke();
+    }
+
+    // The link.
+    ctx.strokeStyle = COLD;
     ctx.beginPath();
     ctx.moveTo(nodes[0].x * w, mid);
     ctx.lineTo(nodes[3].x * w, mid);
     ctx.stroke();
 
-    // Where the mechanism actually happens: the phone terminates one side and
-    // originates the other, so that segment is drawn as the accent.
-    ctx.strokeStyle = 'rgba(255,107,53,0.22)';
+    // Where the mechanism happens: the phone terminates one side and
+    // originates the other, so that span carries the accent.
+    var pulse = 0.16 + 0.10 * Math.sin(now / 900);
+    ctx.strokeStyle = 'rgba(255,107,53,' + pulse.toFixed(3) + ')';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(nodes[1].x * w, mid);
     ctx.lineTo(nodes[2].x * w, mid);
     ctx.stroke();
+    ctx.lineWidth = 1;
 
     // Packets.
     for (var i = packets.length - 1; i >= 0; i--) {
@@ -851,45 +982,83 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
       var prog = p.down ? 1 - p.t : p.t;
       var x = (nodes[0].x + (nodes[3].x - nodes[0].x) * prog) * w;
       var y = mid + p.lane * Math.sin(p.t * Math.PI);
-
       var fade = Math.sin(p.t * Math.PI);
-      ctx.globalAlpha = 0.25 + fade * 0.65;
-      ctx.fillStyle = p.down ? LIVE : EMBER;
+
+      // A short trail rather than a bare dot: it reads as motion even in a
+      // still frame.
+      var back = p.down ? 5 : -5;
+      var grad = ctx.createLinearGradient(x, y, x + back, y);
+      var col = p.down ? LIVE : EMBER;
+      grad.addColorStop(0, col);
+      grad.addColorStop(1, 'transparent');
+
+      ctx.globalAlpha = 0.22 + fade * 0.7;
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = p.size;
       ctx.beginPath();
-      ctx.arc(x, y, p.size, 0, Math.PI * 2);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + back, y);
+      ctx.stroke();
+
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(x, y, p.size * 0.75, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
 
-    // Nodes.
+    // Throughput trace along the bottom, fed by how many packets are in flight.
+    if (!reduced && now - t0 > 55) {
+      history.push(packets.length);
+      if (history.length > 190) history.shift();
+      t0 = now;
+    }
+    if (history.length > 1) {
+      var base = h - 16, span = h * 0.24, peak = Math.max.apply(null, history) || 1;
+      ctx.beginPath();
+      history.forEach(function (v, idx) {
+        var hx = (idx / (history.length - 1)) * w;
+        var hy = base - (v / peak) * span;
+        idx ? ctx.lineTo(hx, hy) : ctx.moveTo(hx, hy);
+      });
+      ctx.strokeStyle = 'rgba(255,107,53,0.5)';
+      ctx.stroke();
+
+      ctx.lineTo(w, base); ctx.lineTo(0, base); ctx.closePath();
+      var fill = ctx.createLinearGradient(0, base - span, 0, base);
+      fill.addColorStop(0, 'rgba(255,107,53,0.16)');
+      fill.addColorStop(1, 'rgba(255,107,53,0)');
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+
+    // Nodes, drawn last so packets pass behind them.
     nodes.forEach(function (n, idx) {
-      var x = n.x * w;
-      var isPhone = idx === 1;
+      var x = n.x * w, isPhone = idx === 1;
 
-      ctx.fillStyle = '#07090E';
-      ctx.fillRect(x - 34, mid - 13, 68, 26);
-
+      ctx.fillStyle = VOID;
+      ctx.fillRect(x - 38, mid - 14, 76, 28);
       ctx.strokeStyle = isPhone ? EMBER : COLD;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x - 34, mid - 13, 68, 26);
+      ctx.strokeRect(x - 38, mid - 14, 76, 28);
 
       ctx.fillStyle = isPhone ? EMBER : TRACE;
       ctx.font = '700 9px "Space Mono", monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(n.label, x, mid + 3);
+      ctx.fillText(n.label, x, mid + 3.5);
 
       if (n.sub) {
         ctx.fillStyle = FAINT;
         ctx.font = '9px "IBM Plex Sans", sans-serif';
-        ctx.fillText(n.sub, x, mid + 30);
+        ctx.fillText(n.sub, x, mid + 32);
       }
     });
   }
 
   var last = 0;
   function frame(now) {
-    if (now - last > 90) { spawn(); last = now; }
-    draw();
+    if (now - last > 78) { spawn(); last = now; }
+    draw(now);
     requestAnimationFrame(frame);
   }
 
@@ -897,14 +1066,33 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   size();
 
   if (reduced) {
-    // Still show the mechanism, just without motion.
-    for (var i = 0; i < 26; i++) {
-      packets.push({ t: i / 26, down: i % 3 !== 0, speed: 0, lane: (i % 5 - 2) * 5, size: 2 });
+    for (var i = 0; i < 30; i++) {
+      packets.push({ t: i / 30, down: i % 3 !== 0, speed: 0, lane: (i % 5 - 2) * 7, size: 2 });
     }
-    draw();
+    draw(0);
   } else {
     requestAnimationFrame(frame);
   }
+})();
+
+/* The headline rate figures count up once, so the measurement registers as a
+   measurement rather than as decoration. */
+(function () {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  [['dn', 156], ['up', 101]].forEach(function (pair) {
+    var el = document.getElementById(pair[0]);
+    if (!el) return;
+    var target = pair[1], start = null;
+
+    requestAnimationFrame(function step(ts) {
+      if (!start) start = ts;
+      var k = Math.min((ts - start) / 1100, 1);
+      var eased = 1 - Math.pow(1 - k, 3);
+      el.textContent = (target * eased).toFixed(1);
+      if (k < 1) requestAnimationFrame(step);
+    });
+  });
 })();
 </script>
 
