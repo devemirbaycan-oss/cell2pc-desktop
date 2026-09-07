@@ -555,7 +555,10 @@ strong { color: var(--signal); font-weight: 500; }
 }
 .toc a:hover { color: var(--ember); border-left-color: var(--ember); padding-left: 22px; text-decoration: none; }
 
-.prose { max-width: 860px; }
+.prose { max-width: none; }
+/* Running text keeps a measure so lines stay readable; everything else in the
+   column - tables, code, notes - takes the full width available. */
+.prose > p, .prose > ul, .prose > ol { max-width: var(--measure); }
 .prose h2 { margin-top: 0; scroll-margin-top: 88px; }
 .prose h2:not(:first-child) { margin-top: 56px; }
 .prose h3 { margin-top: 34px; }
@@ -631,12 +634,12 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
 
 <header>
   <nav>
-    <a href="#/" class="mark"><span class="pulse"></span>CELL2PC</a>
+    <a href="/" class="mark"><span class="pulse"></span>CELL2PC</a>
     <div class="links">
-      <a href="#/" data-v="home">Overview</a>
-      <a href="#/docs" data-v="docs">Docs</a>
-      <a href="#/get" data-v="get">Download</a>
-      <a href="#/privacy" data-v="privacy">Privacy</a>
+      <a href="/" data-v="home">Overview</a>
+      <a href="/docs" data-v="docs">Docs</a>
+      <a href="/download" data-v="get">Download</a>
+      <a href="/privacy" data-v="privacy">Privacy</a>
       <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">Source</a>
     </div>
   </nav>
@@ -657,8 +660,8 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           the phone has signal.
         </p>
         <div class="actions">
-          <a href="#/get" class="btn btn-solid">Download</a>
-          <a href="#/docs" class="btn btn-line">How it works</a>
+          <a href="/download" class="btn btn-solid">Download</a>
+          <a href="/docs" class="btn btn-line">How it works</a>
         </div>
       </div>
 
@@ -882,12 +885,12 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
 
         <aside class="toc">
           <p class="h">Contents</p>
-          <a href="#/docs#start">Getting started</a>
-          <a href="#/docs#cli">Command line</a>
-          <a href="#/docs#fix">When it breaks</a>
-          <a href="#/docs#how">How it works</a>
-          <a href="#/docs#sec">Security</a>
-          <a href="#/docs#build">Building</a>
+          <a href="/docs#start">Getting started</a>
+          <a href="/docs#cli">Command line</a>
+          <a href="/docs#fix">When it breaks</a>
+          <a href="/docs#how">How it works</a>
+          <a href="/docs#sec">Security</a>
+          <a href="/docs#build">Building</a>
         </aside>
 
         <div class="prose">
@@ -1045,7 +1048,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
         <li>Note the pairing code and passphrase</li>
         <li>Run Cell2Pc on the PC, enter the code, press Connect</li>
       </ol>
-      <p>The <a href="#/docs">documentation</a> covers the rest, including what to do when something goes wrong.</p>
+      <p>The <a href="/docs">documentation</a> covers the rest, including what to do when something goes wrong.</p>
     </section>
   </div>
 </main>
@@ -1059,13 +1062,13 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
         <aside class="toc">
           <p class="h">Contents</p>
-          <a href="#/privacy#short">The short version</a>
-          <a href="#/privacy#stored">What is stored</a>
-          <a href="#/privacy#traffic">Your traffic</a>
-          <a href="#/privacy#third">Third parties</a>
-          <a href="#/privacy#carrier">Your carrier</a>
-          <a href="#/privacy#rights">Your rights</a>
-          <a href="#/privacy#liability">Liability</a>
+          <a href="/privacy#short">The short version</a>
+          <a href="/privacy#stored">What is stored</a>
+          <a href="/privacy#traffic">Your traffic</a>
+          <a href="/privacy#third">Third parties</a>
+          <a href="/privacy#carrier">Your carrier</a>
+          <a href="/privacy#rights">Your rights</a>
+          <a href="/privacy#liability">Liability</a>
         </aside>
 
         <div class="prose">
@@ -1214,7 +1217,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 <footer>
   <div class="shell">
     <span class="mono">CELL2PC · 1.0.0</span>
-    <span><a href="#/privacy">Privacy &amp; terms</a> · Check your carrier's terms before use.</span>
+    <span><a href="/privacy">Privacy &amp; terms</a> · Check your carrier's terms before use.</span>
   </div>
 </footer>
 
@@ -1243,30 +1246,66 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   });
 })();
 
-/* Routing. Hash-based so the file works from disk with no rewrite rules. */
+/* ---------------------------------------------------------------------------
+   Routing on real paths - /docs rather than /#/docs.
+
+   nginx serves index.html for these routes, so a direct link or a refresh
+   lands on the right view rather than a 404. Links are intercepted and pushed
+   through the History API so navigation stays instant.
+
+   Opened straight from disk there is no server to rewrite anything, so the
+   file:// case falls back to the hash form.
+--------------------------------------------------------------------------- */
 (function () {
-  var views = ['home', 'docs', 'get', 'privacy'];
+  var views = { home: 'home', docs: 'docs', download: 'get', privacy: 'privacy' };
+  var ids = ['home', 'docs', 'get', 'privacy'];
+  var isFile = location.protocol === 'file:';
 
-  function route() {
-    var parts = location.hash.replace(/^#\/?/, '').split('#');
-    var name = views.indexOf(parts[0]) >= 0 ? parts[0] : 'home';
-
-    views.forEach(function (v) {
-      document.getElementById(v).classList.toggle('on', v === name);
-    });
-    document.querySelectorAll('[data-v]').forEach(function (a) {
-      a.classList.toggle('on', a.getAttribute('data-v') === name);
-    });
-
-    if (parts[1]) {
-      var t = document.getElementById(parts[1]);
-      if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  function current() {
+    if (isFile) {
+      var raw = location.hash.replace(/^#\/?/, '').split('#');
+      return { view: views[raw[0]] || 'home', anchor: raw[1] };
     }
-    scrollTo(0, 0);
+    var seg = location.pathname.replace(/^\/|\/$/g, '').split('/')[0];
+    return { view: views[seg] || 'home', anchor: location.hash.replace(/^#/, '') };
   }
 
-  addEventListener('hashchange', route);
-  route();
+  function render(scroll) {
+    var at = current();
+    ids.forEach(function (v) {
+      document.getElementById(v).classList.toggle('on', v === at.view);
+    });
+    document.querySelectorAll('[data-v]').forEach(function (a) {
+      a.classList.toggle('on', a.getAttribute('data-v') === at.view);
+    });
+
+    if (at.anchor) {
+      var t = document.getElementById(at.anchor);
+      if (t) { t.scrollIntoView({ behavior: scroll ? 'smooth' : 'auto', block: 'start' }); return; }
+    }
+    if (scroll) scrollTo(0, 0);
+  }
+
+  // Intercept same-origin links so a click does not reload the document.
+  addEventListener('click', function (e) {
+    if (isFile) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+    var a = e.target.closest('a');
+    if (!a) return;
+
+    var href = a.getAttribute('href') || '';
+    if (!href.startsWith('/')) return;   // external, mailto, or a bare anchor
+
+    e.preventDefault();
+    if (href !== location.pathname + location.hash) history.pushState(null, '', href);
+    render(true);
+  });
+
+  addEventListener('popstate', function () { render(true); });
+  addEventListener('hashchange', function () { if (isFile) render(true); });
+
+  render(false);
 })();
 
 /* Sections lift in as they arrive. They start visible and animate from a
