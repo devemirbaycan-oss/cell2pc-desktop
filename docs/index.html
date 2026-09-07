@@ -566,6 +566,7 @@ strong { color: var(--signal); font-weight: 500; }
 .prose h2 { margin-top: 0; scroll-margin-top: 88px; }
 .prose h2:not(:first-child) { margin-top: 56px; }
 .prose h3 { margin-top: 34px; }
+.prose h4 { font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--ember); margin: 26px 0 8px; letter-spacing: -0.1px; }
 .prose ol, .prose ul { color: var(--trace); max-width: var(--measure); padding-left: 20px; }
 .prose li { margin-bottom: 8px; }
 
@@ -1067,12 +1068,15 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
         <aside class="toc">
           <p class="h">Contents</p>
           <a href="/privacy#short">The short version</a>
-          <a href="/privacy#stored">What is stored</a>
+          <a href="/privacy#device">On your devices</a>
+          <a href="/privacy#sub">Subscriptions</a>
+          <a href="/privacy#play">Google Play</a>
           <a href="/privacy#traffic">Your traffic</a>
-          <a href="/privacy#third">Third parties</a>
-          <a href="/privacy#carrier">Your carrier</a>
+          <a href="/privacy#third">Who else is involved</a>
+          <a href="/privacy#retention">How long we keep it</a>
           <a href="/privacy#rights">Your rights</a>
-          <a href="/privacy#liability">Liability</a>
+          <a href="/privacy#carrier">Your carrier</a>
+          <a href="/privacy#liability">Warranty and liability</a>
         </aside>
 
         <div class="prose">
@@ -1080,75 +1084,189 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
           <h2 id="short">The short version</h2>
 
           <div class="claim">
-            <p>There is no server. Cell2Pc has no account, no telemetry and no analytics, and the phone and PC talk only to each other.</p>
+            <p>The app itself has no analytics and no telemetry. Your browsing is never recorded. The only thing that reaches a server of ours is proof that you paid.</p>
           </div>
 
           <p>
-            That is not a promise about how carefully data is handled — it is a
-            statement about architecture. Nothing is transmitted to us because
-            there is nowhere to transmit it to. The desktop client is
+            Cell2Pc moves your PC's traffic through your phone. Everything about
+            that — which sites you visit, what you send, who you connect to —
+            stays between your devices and is never sent to us, stored by us, or
+            inspected. The desktop client is
             <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">open source</a>,
-            so this is checkable rather than something you have to take on faith.
+            so that part is checkable rather than something you take on faith.
+          </p>
+          <p>
+            Cell2Pc is paid software, and validating a subscription does require
+            a small amount of data. That is set out in full below rather than
+            buried.
           </p>
 
-          <h2 id="stored">What is stored, and where</h2>
-          <p>Everything below stays on your own devices. None of it leaves them.</p>
+          <h2 id="device">What stays on your devices</h2>
+          <p>None of the following is transmitted anywhere.</p>
 
           <table>
             <tr><th>What</th><th>Where</th><th>Why</th></tr>
-            <tr><td>Pairing code and Wi-Fi passphrase</td><td>Phone, and the PC you paired</td><td>So you do not retype them every time</td></tr>
+            <tr><td>Pairing code and Wi-Fi passphrase</td><td>Phone, and each paired PC</td><td>So you do not retype them every time</td></tr>
             <tr><td>Daily and monthly byte totals</td><td>Phone</td><td>Data caps and the usage display</td></tr>
             <tr><td>Session history</td><td>Phone</td><td>Start and end time, bytes moved, and the local address of the PC — not what was visited</td></tr>
             <tr><td>Crash reports</td><td>PC only</td><td>Written to a local file so a crash leaves evidence. Never uploaded</td></tr>
             <tr><td>Routing journal</td><td>PC only</td><td>Lets normal routing be restored if the app is interrupted</td></tr>
           </table>
 
+          <div class="note">
+            <strong>Never recorded, on device or anywhere else:</strong> the
+            sites you visit, the addresses you connect to, DNS lookups, or the
+            contents of any packet. The tunnel relays traffic; it does not read
+            it.
+          </div>
+
+          <h2 id="sub">Subscriptions</h2>
           <p>
-            Uninstalling either app removes its own data. On the PC you may also
-            want to delete the folder named in the crash report path if you have
-            been sent one.
+            Paid features are sold through Google Play. Google handles the
+            payment itself — <strong>we never see your card details, billing
+            address or full name</strong>, and Google does not pass them to us.
+          </p>
+          <p>
+            To check that a subscription is genuine and still active, the app
+            sends the following to a server we operate:
+          </p>
+
+          <table>
+            <tr><th>What</th><th>Why it is needed</th></tr>
+            <tr><td>Play purchase token</td><td>The receipt Google issues. It is what we verify with Google to confirm the subscription is real and current</td></tr>
+            <tr><td>Product and order identifier</td><td>Which plan was bought, and to recognise a renewal or refund</td></tr>
+            <tr><td>An install identifier</td><td>A random value generated on first run, so an entitlement follows your install. It is not your device ID, advertising ID, phone number or account</td></tr>
+            <tr><td>App version and Android version</td><td>To reject builds with a known billing defect</td></tr>
+          </table>
+
+          <p>
+            That is the complete list. No usage data, no traffic data, no
+            location, no contacts, no advertising identifier, and nothing about
+            what you do with the connection.
           </p>
 
           <div class="note">
-            <strong>What is deliberately not recorded:</strong> the sites you
-            visit, the addresses you connect to, DNS lookups, packet contents,
-            or anything identifying you or your devices beyond the local network
-            address of a paired PC.
+            <strong>Why a server at all.</strong> A subscription check that runs
+            only on the phone can be bypassed by editing the app. Validating the
+            receipt with Google server-side is the only way to make a paid
+            product hold. It is also the reason this page can no longer say
+            "there is no server" — for billing, there now is one.
           </div>
+
+          <h4>Lawful basis</h4>
+          <p>
+            Under GDPR this processing is necessary to perform our contract with
+            you — you bought a subscription and we have to honour it — rather
+            than resting on consent. Under KVKK the equivalent basis is that it
+            is directly related to and necessary for performing that contract.
+          </p>
+
+          <h2 id="play">Google Play</h2>
+          <p>
+            Installing through Google Play means Google collects data about that
+            install independently of us, under
+            <a href="https://policies.google.com/privacy">their privacy policy</a>,
+            not this one. That typically includes your Google account, device
+            model, and purchase records.
+          </p>
+          <p>Two things Google may also show us, in aggregate:</p>
+          <ul>
+            <li>
+              <strong>Crash reports and ANRs.</strong> Android can send crash
+              traces to Play, and we can see them in Play Console. These are
+              stack traces and device models, aggregated across users — they
+              do not identify you and contain nothing about your traffic.
+              Android asks for your consent to this, and you can turn it off in
+              your device settings.
+            </li>
+            <li>
+              <strong>Install and subscription statistics.</strong> Counts of
+              installs, uninstalls, renewals and cancellations by country and
+              device. Aggregate figures, not individual records.
+            </li>
+          </ul>
+          <p>
+            We do not add any analytics of our own. There is no Firebase, no
+            Crashlytics, no advertising SDK and no third-party tracker in the
+            app — which you can verify from the build file in the repository.
+          </p>
 
           <h2 id="traffic">Your traffic</h2>
           <p>
-            Cell2Pc moves your PC's network traffic through your phone. That
-            traffic passes through the phone by design — it is what the product
-            does — but it is relayed, not inspected, stored or copied anywhere.
+            Traffic passes through the phone by design — that is what the
+            product does — but it is relayed, not inspected, stored or copied.
+            Between your PC and the phone every frame is encrypted with AES-GCM
+            using a key derived from your pairing code.
           </p>
           <p>
-            Between your PC and the phone, every frame is encrypted with AES-GCM
-            using a key derived from your pairing code. Beyond the phone, your
-            traffic is exactly as private as it would be if you had opened the
-            same connections on the phone itself — HTTPS stays HTTPS, and
-            anything unencrypted was already unencrypted.
+            Beyond the phone your traffic is exactly as private as it would be
+            if you had opened the same connections on the phone itself. HTTPS
+            stays HTTPS; anything unencrypted was already unencrypted.
           </p>
 
-          <h2 id="third">Third parties</h2>
-          <p>There are three, and none of them receive anything about you from us.</p>
+          <h2 id="third">Who else is involved</h2>
           <ul>
-            <li><strong>Your carrier</strong> carries the traffic, as it would for any app on your phone.</li>
-            <li><strong>Wintun</strong>, the Windows network driver, is bundled and runs locally. It is a driver, not a service.</li>
-            <li><strong>GitHub</strong> hosts the downloads. Fetching a release is a request to GitHub and subject to their policy; the app itself never contacts them.</li>
+            <li><strong>Google</strong> — processes payments and distributes the app. A payment processor and, for the data described above, a separate controller.</li>
+            <li><strong>Our hosting provider</strong> — runs the server that validates subscriptions, in Germany. A processor acting on our instructions.</li>
+            <li><strong>Your mobile operator</strong> — carries the traffic, as it would for any app on your phone.</li>
+            <li><strong>Wintun</strong> — the bundled Windows network driver. It runs locally and is a driver, not a service.</li>
+            <li><strong>GitHub</strong> — hosts the downloads. Fetching a release is a request to GitHub; the app itself never contacts them.</li>
           </ul>
           <p>
-            No advertising, no analytics, no trackers, no data brokers. Nothing
-            is sold or shared, because nothing is collected.
+            Nothing is sold, rented or shared for advertising. There are no data
+            brokers, and no third party receives your data for their own
+            purposes.
+          </p>
+
+          <h2 id="retention">How long we keep it</h2>
+          <table>
+            <tr><th>What</th><th>Kept</th></tr>
+            <tr><td>Subscription records</td><td>While the subscription is active, then up to the period tax law requires records of a sale to be retained</td></tr>
+            <tr><td>Install identifier</td><td>Deleted with the subscription record</td></tr>
+            <tr><td>Server logs</td><td>30 days, then deleted</td></tr>
+            <tr><td>Everything on your devices</td><td>Until you delete it or uninstall</td></tr>
+          </table>
+          <p>
+            Data is stored on servers in Germany, inside the EEA. If that ever
+            changes, this page changes with it.
+          </p>
+
+          <h2 id="rights">Your rights</h2>
+          <p>
+            Under GDPR and KVKK you may request a copy of the personal data we
+            hold about you, ask for it to be corrected, ask for it to be
+            deleted, object to processing, or ask for it in a portable form.
+          </p>
+          <p>
+            In practice that means the subscription records above — which is all
+            we hold. Everything else lives on your devices, where you can
+            inspect and delete it yourself without asking us.
+          </p>
+          <p>
+            Write to <a href="mailto:dev.emirbaycan@gmail.com">dev.emirbaycan@gmail.com</a>
+            and we will respond within 30 days. Deleting a subscription record
+            ends the entitlement it proves, so a refund request should go to
+            Google first.
+          </p>
+          <p>
+            You also have the right to complain to a supervisory authority — in
+            Turkey the Personal Data Protection Authority (KVKK), or in the EU
+            your national data protection authority.
+          </p>
+
+          <h4>Children</h4>
+          <p>
+            Cell2Pc is not directed at children and we do not knowingly collect
+            data from anyone under 16. If you believe a child has provided data
+            through a subscription, write to us and it will be deleted.
           </p>
 
           <h2 id="carrier">Your carrier, and what this software does not decide</h2>
           <p>
             Cell2Pc routes your PC's traffic through your mobile connection.
             Whether that use is permitted is governed by your agreement with
-            your mobile operator, and by the law where you are. That is your
-            responsibility to check, not something this software can decide for
-            you.
+            your mobile operator and by the law where you are. That is yours to
+            check, not something this software can decide for you.
           </p>
           <div class="note">
             The traffic is architecturally ordinary app traffic — the phone
@@ -1158,28 +1276,9 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
             that it does.
           </div>
           <p>
-            You are also responsible for the data you move and the charges you
-            incur. The built-in cap exists to help with the second of those, but
-            it is a convenience, not a guarantee.
-          </p>
-
-          <h2 id="rights">Your rights</h2>
-          <p>
-            Data protection law gives you rights to access, correct, export and
-            erase personal data held about you. In our case those rights have
-            nothing to attach to: we hold no personal data about you, so there
-            is nothing to produce, correct or delete on request.
-          </p>
-          <p>
-            The data described above is on your devices and under your control.
-            You can inspect it, and uninstalling removes it. No request to us is
-            needed, and none would be useful.
-          </p>
-          <p>
-            If that ever changes, this page changes with it and the date at the
-            top moves. Continuing to use the software after a change means
-            accepting it; if you do not, uninstalling ends the arrangement
-            completely.
+            You are responsible for the data you move and the charges you incur.
+            The built-in cap helps with the second, but it is a convenience, not
+            a guarantee.
           </p>
 
           <h2 id="liability">Warranty and liability</h2>
@@ -1199,16 +1298,22 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
             <strong>Two things this cannot do, and does not try to.</strong>
             Nothing here excludes liability for death or personal injury caused
             by negligence, or for fraud — no agreement can. And where you deal
-            as a consumer you have statutory rights that cannot be signed away;
+            as a consumer you have statutory rights that cannot be signed away,
+            including your rights over a purchase made through Google Play;
             nothing here affects them. Anything above that a court finds
             unenforceable is severed, and the rest continues to apply.
           </div>
 
-          <h2>Contact</h2>
+          <h2>Changes and contact</h2>
           <p>
-            Questions about this page can go to
+            If this page changes the date at the top moves. A change that
+            materially affects what is collected will be announced in the app
+            before it takes effect.
+          </p>
+          <p>
+            Questions go to
             <a href="mailto:dev.emirbaycan@gmail.com">dev.emirbaycan@gmail.com</a>,
-            or to the
+            or the
             <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop/issues">issue tracker</a>.
           </p>
         </div>
