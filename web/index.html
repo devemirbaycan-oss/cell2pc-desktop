@@ -458,6 +458,41 @@ strong { color: var(--signal); font-weight: 500; }
 .swap:hover .now::before { transform: translateX(3px); }
 .swap p { font-size: 13.5px; color: var(--trace); margin: 0; max-width: 40ch; }
 
+
+/* Comparison table. One column is emphasised - the point of the table - and
+   the rest stays quiet so the difference reads rather than the styling. */
+.versus { width: 100%; margin: 0 0 16px; font-size: 14px; max-width: none; }
+.versus th, .versus td { padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.versus tr:first-child th { border-bottom-color: var(--rule-lit); }
+.versus th {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 400;
+  text-align: left;
+}
+.versus th.us { color: var(--ember); }
+.versus td { color: var(--faint); }
+.versus td:first-child { color: var(--trace); width: 34%; }
+.versus td.us {
+  color: var(--signal);
+  background: linear-gradient(90deg, rgba(255,107,53,0.055), rgba(255,107,53,0.02));
+  border-left: 1px solid rgba(255,107,53,0.18);
+}
+.versus th.us { background: rgba(255,107,53,0.05); border-left: 1px solid rgba(255,107,53,0.18); }
+.versus tr:hover td { color: var(--trace); }
+.versus tr:hover td.us { color: var(--signal); }
+
+.fineprint { font-size: 13px; color: var(--faint); max-width: 58ch; }
+
+@media (max-width: 620px) {
+  .versus { font-size: 13px; }
+  .versus th, .versus td { padding: 10px 8px; }
+  .versus td:first-child { width: 30%; }
+}
+
 /* --------------------------------------------------------------- stats -- */
 
 .readout {
@@ -713,6 +748,73 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
             fingerprint spoofing anywhere in it. Whether you may use it is
             between you and your carrier's terms.
           </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>Against a hotspot</h2>
+          <p>
+            Everyone has used the built-in hotspot. It is worth being precise
+            about where this differs, because two of those rows are the whole
+            reason the project exists.
+          </p>
+        </div>
+        <div>
+          <table class="versus">
+            <tr>
+              <th></th>
+              <th>Phone hotspot</th>
+              <th class="us">Cell2Pc</th>
+            </tr>
+            <tr>
+              <td>Carrier sees</td>
+              <td>A tethered device</td>
+              <td class="us">One app on your phone</td>
+            </tr>
+            <tr>
+              <td>Uses the tethering stack</td>
+              <td>Yes</td>
+              <td class="us">Never</td>
+            </tr>
+            <tr>
+              <td>Counts against a tether allowance</td>
+              <td>Yes</td>
+              <td class="us">It is ordinary data</td>
+            </tr>
+            <tr>
+              <td>Needs root</td>
+              <td>No</td>
+              <td class="us">No</td>
+            </tr>
+            <tr>
+              <td>Radio</td>
+              <td>Access point for anything nearby</td>
+              <td class="us">One paired PC, or a cable</td>
+            </tr>
+            <tr>
+              <td>Encryption</td>
+              <td>WPA2, shared passphrase</td>
+              <td class="us">WPA2 plus per-frame AES-GCM</td>
+            </tr>
+            <tr>
+              <td>Survives a dropped link</td>
+              <td>Apps lose their connections</td>
+              <td class="us">Adapter stays up, tunnel rebuilds</td>
+            </tr>
+            <tr>
+              <td>Battery</td>
+              <td>Access point running constantly</td>
+              <td class="us">Same, or charging over USB</td>
+            </tr>
+          </table>
+          <p class="fineprint">
+            A hotspot is simpler and works with anything that speaks Wi-Fi. If
+            that suits you, use it — this exists for when it does not.
+          </p>
         </div>
       </div>
     </section>
