@@ -1,0 +1,27 @@
+Cell2Pc shares your phone's mobile data with this PC over Wi-Fi Direct.
+
+This desktop client is open source (MIT). The phone app is separate.
+
+WHAT IT INSTALLS
+
+  Cell2Pc          the app
+  cell2pc          the same thing from a terminal
+  wintun.dll       the virtual network driver the tunnel needs
+
+WHY IT ASKS FOR ADMINISTRATOR
+
+Cell2Pc creates a network adapter and changes this PC's routing so that all
+traffic goes through your phone. Windows treats both as privileged, so the app
+asks for elevation when you press Connect. It restores your normal routing when
+you disconnect, and again on next start if it is ever interrupted.
+
+ABOUT THE WINDOWS WARNING
+
+This installer is not code-signed, so Windows SmartScreen may say it does not
+recognise it. That is a statement about the certificate, not about the software.
+Choose "More info" and then "Run anyway" to continue.
+
+IF YOUR PC EVER LOSES INTERNET
+
+Run "Fix my internet" from the Start menu. It removes anything the tunnel left
+behind and is safe to run at any time.

@@ -1,0 +1,18 @@
+# Build output
+**/bin/
+**/obj/
+dist/
+dist-linux/
+packaging/output/
+
+# The Wintun driver is not redistributed here; download it from wintun.net
+wintun.dll
+
+# IDE
+.vs/
+.idea/
+*.user
+
+# OS
+Thumbs.db
+desktop.ini

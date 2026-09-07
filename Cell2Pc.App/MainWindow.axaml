@@ -1,0 +1,150 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Cell2Pc.App.MainWindow"
+        Title="Cell2Pc"
+        Width="440" Height="700"
+        MinWidth="400" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Ink}">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20,18" Spacing="12">
+
+      <!-- Header -->
+      <StackPanel Spacing="1">
+        <TextBlock Text="Cell2Pc" FontSize="25" FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimary}"/>
+        <TextBlock Text="Your PC on the phone's mobile data" Classes="hint"/>
+      </StackPanel>
+
+      <!-- Status + primary action -->
+      <Border Classes="panel">
+        <StackPanel Spacing="14">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Ellipse x:Name="StatusDot" Grid.Column="0"
+                     Width="10" Height="10"
+                     Fill="{StaticResource TextTertiary}"
+                     VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="1">
+              <TextBlock x:Name="StatusText" Text="Not connected"
+                         FontSize="19" FontWeight="SemiBold"
+                         Foreground="{StaticResource TextPrimary}"/>
+              <TextBlock x:Name="DetailText" Text="Enter the pairing code from the phone"
+                         FontSize="12" Foreground="{StaticResource TextSecondary}"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+            <StackPanel x:Name="LinkBars" Grid.Column="2" Orientation="Horizontal"
+                        Spacing="3" VerticalAlignment="Center" IsVisible="False">
+              <Border x:Name="Link0" Width="14" Height="4" CornerRadius="2" Background="{StaticResource Surface2}"/>
+              <Border x:Name="Link1" Width="14" Height="4" CornerRadius="2" Background="{StaticResource Surface2}"/>
+              <Border x:Name="Link2" Width="14" Height="4" CornerRadius="2" Background="{StaticResource Surface2}"/>
+              <Border x:Name="Link3" Width="14" Height="4" CornerRadius="2" Background="{StaticResource Surface2}"/>
+            </StackPanel>
+          </Grid>
+
+          <Button x:Name="ConnectButton" Classes="primary"
+                  HorizontalAlignment="Stretch" Content="Connect"
+                  Click="OnConnectClick"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Credentials: only before a tunnel exists -->
+      <Border x:Name="SetupPanel" Classes="panel">
+        <StackPanel Spacing="12">
+          <TextBlock Text="From the phone" Classes="sectionLabel"/>
+
+          <StackPanel Spacing="5">
+            <TextBlock Text="Pairing code" Classes="label"/>
+            <TextBox x:Name="TokenBox" Watermark="k7m2xq4p"/>
+          </StackPanel>
+
+          <StackPanel Spacing="5">
+            <TextBlock Text="Wi-Fi passphrase" Classes="label"/>
+            <TextBox x:Name="PassphraseBox" Watermark="only needed the first time"/>
+          </StackPanel>
+
+          <TextBlock Classes="hint"
+                     Text="Open Cell2Pc on the phone and tap Wi-Fi Direct. Both values are shown there."/>
+        </StackPanel>
+      </Border>
+
+      <!-- Live traffic -->
+      <Border x:Name="TrafficPanel" Classes="panel" IsVisible="False">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Traffic" Classes="sectionLabel"/>
+
+          <Grid ColumnDefinitions="*,*">
+            <StackPanel Grid.Column="0" Spacing="1">
+              <TextBlock Text="DOWN" Classes="sectionLabel"/>
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock x:Name="DownSpeed" Text="0.0" Classes="bigStat"
+                           Foreground="{StaticResource AccentGreen}"/>
+                <TextBlock Text="Mbps" FontSize="13" VerticalAlignment="Bottom"
+                           Margin="0,0,0,6" Foreground="{StaticResource TextSecondary}"/>
+              </StackPanel>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="1">
+              <TextBlock Text="UP" Classes="sectionLabel"/>
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock x:Name="UpSpeed" Text="0.0" Classes="bigStat"
+                           Foreground="{StaticResource AccentBlue}"/>
+                <TextBlock Text="Mbps" FontSize="13" VerticalAlignment="Bottom"
+                           Margin="0,0,0,6" Foreground="{StaticResource TextSecondary}"/>
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+
+          <!-- Throughput history: the shape says whether it is steady or stalling,
+               which a single number cannot. -->
+          <StackPanel x:Name="Sparkline" Orientation="Horizontal" Height="30"
+                      Spacing="2" VerticalAlignment="Bottom"/>
+
+          <Grid ColumnDefinitions="*,*">
+            <TextBlock x:Name="TotalDown" Grid.Column="0" Text="0 B down"
+                       FontSize="11" FontFamily="{StaticResource Mono}"
+                       Foreground="{StaticResource TextTertiary}"/>
+            <TextBlock x:Name="TotalUp" Grid.Column="1" Text="0 B up"
+                       FontSize="11" FontFamily="{StaticResource Mono}"
+                       HorizontalAlignment="Right"
+                       Foreground="{StaticResource TextTertiary}"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Connection detail -->
+      <Border x:Name="DetailPanel" Classes="panel" IsVisible="False">
+        <StackPanel Spacing="9">
+          <TextBlock Text="Connection" Classes="sectionLabel"/>
+
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Text="Links" Classes="label"/>
+            <TextBlock x:Name="LinkCount" Grid.Column="1" Text="0 of 4" Classes="value"/>
+          </Grid>
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Text="Open connections" Classes="label"/>
+            <TextBlock x:Name="StreamCount" Grid.Column="1" Text="0" Classes="value"/>
+          </Grid>
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Text="Reconnects" Classes="label"/>
+            <TextBlock x:Name="ReconnectCount" Grid.Column="1" Text="0" Classes="value"/>
+          </Grid>
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Text="Session" Classes="label"/>
+            <TextBlock x:Name="Uptime" Grid.Column="1" Text="0s" Classes="value"/>
+          </Grid>
+
+          <!-- Only appears once something has actually gone wrong. "Tunnel
+               closed" alone says nothing; the socket error says whether the
+               phone dropped us or the Wi-Fi went away. -->
+          <StackPanel x:Name="DropsSection" Spacing="6" IsVisible="False">
+            <Border Height="1" Background="{StaticResource Divider}" Margin="0,4"/>
+            <TextBlock Text="Recent drops" Classes="sectionLabel"/>
+            <TextBlock x:Name="DropList" Classes="hint"
+                       FontFamily="{StaticResource Mono}" FontSize="10"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+    </StackPanel>
+  </ScrollViewer>
+</Window>
