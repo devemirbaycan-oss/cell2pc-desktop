@@ -407,6 +407,57 @@ strong { color: var(--signal); font-weight: 500; }
   .term:hover { padding-left: 10px; }
 }
 
+
+/* The substitution row: what you stop carrying, and what replaces it. Not
+   cards - the arrow between the halves is the content. */
+.swaps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  border: 1px solid var(--rule);
+  margin-top: clamp(32px, 4vw, 52px);
+}
+.swap {
+  padding: 26px 26px 28px;
+  border-right: 1px solid var(--rule);
+  transition: background 0.3s var(--ease);
+}
+.swap:last-child { border-right: none; }
+.swap:hover { background: var(--panel); }
+@media (max-width: 860px) {
+  .swap { border-right: none; border-bottom: 1px solid var(--rule); }
+  .swap:last-child { border-bottom: none; }
+}
+.swap .was {
+  display: block;
+  font-family: var(--display);
+  font-size: 12.5px;
+  color: var(--faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--ember-d);
+  text-decoration-thickness: 1px;
+  letter-spacing: 0.2px;
+}
+.swap .now {
+  display: block;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--signal);
+  letter-spacing: -0.4px;
+  margin: 7px 0 12px;
+  position: relative;
+  padding-left: 20px;
+}
+.swap .now::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--ember);
+  transition: transform 0.3s var(--ease);
+}
+.swap:hover .now::before { transform: translateX(3px); }
+.swap p { font-size: 13.5px; color: var(--trace); margin: 0; max-width: 40ch; }
+
 /* --------------------------------------------------------------- stats -- */
 
 .readout {
@@ -561,13 +612,13 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
 
     <div class="hero">
       <div>
-        <p class="eyebrow">Android → Wi-Fi Direct → your PC</p>
+        <p class="eyebrow">Android → Wi-Fi Direct or USB → your PC</p>
         <h1 id="headline">Your PC on the phone's <em>mobile data</em></h1>
         <p class="lede">
-          Not a hotspot. Your PC's packets stop at the phone, which opens
-          <strong>its own connections</strong> on the cellular interface and
-          copies the bytes across. Nothing forwards a packet, so nothing on the
-          network sees a second device.
+          No mobile router, no second SIM, no hotel Wi-Fi. Your phone is
+          already a modem — Cell2Pc gives your laptop
+          <strong>the connection it is already paying for</strong>, anywhere
+          the phone has signal.
         </p>
         <div class="actions">
           <a href="#/get" class="btn btn-solid">Download</a>
@@ -577,7 +628,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
 
       <div class="scope">
         <div class="scope-head">
-          <span>Link · 5 GHz Wi-Fi Direct</span>
+          <span id="linkmode">Link · 5 GHz Wi-Fi Direct</span>
           <span class="rate"><span id="dn">156.0</span> Mbps ↓ · <span id="up">101.0</span> Mbps ↑ · 1.7 ms</span>
         </div>
         <canvas id="flow" width="1200" height="300" aria-label="Packets crossing from the PC through the phone to the cellular network"></canvas>
@@ -587,6 +638,54 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
         </p>
       </div>
     </div>
+
+
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>The modem you already own</h2>
+          <div class="claim">
+            <p>A phone is a modem with a screen. Cell2Pc stops treating those as two purchases.</p>
+          </div>
+        </div>
+        <div>
+          <p>
+            A mobile router is a second device to buy, a second line to pay for,
+            and a third thing to remember to charge. It does one job your phone
+            already does — and does badly, because it is the one you leave
+            behind.
+          </p>
+          <p>
+            Your phone is charged, in your pocket, and on the best network you
+            could get. Cell2Pc turns that into a connection your laptop can use,
+            anywhere the phone has signal.
+          </p>
+        </div>
+      </div>
+
+      <div class="swaps">
+        <div class="swap">
+          <span class="was">A mobile router</span>
+          <span class="now">The phone in your pocket</span>
+          <p>No second device, no second SIM, nothing extra to charge or lose.</p>
+        </div>
+        <div class="swap">
+          <span class="was">Hotel and cafe Wi-Fi</span>
+          <span class="now">Your own connection</span>
+          <p>A network you control, on any desk, in any country your plan reaches.</p>
+        </div>
+        <div class="swap">
+          <span class="was">Finding a socket for the router</span>
+          <span class="now">A cable, if you want one</span>
+          <p>USB carries the same tunnel at 284 Mbps and charges the phone while it works.</p>
+        </div>
+        <div class="swap">
+          <span class="was">Fifteen minutes of setup</span>
+          <span class="now">One button</span>
+          <p>The PC remembers the pairing and connects itself the next time.</p>
+        </div>
+      </div>
+    </section>
 
     <section class="lift">
       <div class="split">
@@ -644,6 +743,10 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           <div class="term">
             <dt>Encrypted</dt>
             <dd>A pairing code authorises each PC and keys AES-GCM on every frame. Joining the Wi-Fi is not enough to use the connection, or to read it.</dd>
+          </div>
+          <div class="term">
+            <dt>Or a cable</dt>
+            <dd>USB carries the same tunnel when Wi-Fi is congested — measured at 284 Mbps, and it charges the phone while it runs. Not USB tethering: the cable is only a pipe, and the phone still opens its own sockets.</dd>
           </div>
           <div class="term">
             <dt>Four PCs</dt>
@@ -733,8 +836,31 @@ cell2pc recover               <span class="c"># restore routing after a crash</s
           <h3>Windows warns about the installer</h3>
           <p>It is not code-signed, so SmartScreen does not recognise it — a statement about the certificate, not the software. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
 
+          <h3>Over a cable instead</h3>
+          <p>
+            The same tunnel runs over USB, which is worth reaching for when the
+            2.4 GHz band is crowded or you want the phone charging while it
+            works. It measured <strong>284 Mbps down and 245 Mbps up</strong> —
+            roughly double the wireless link, and far above any cellular
+            connection it would carry.
+          </p>
+          <div class="note">
+            This is <strong>not</strong> USB tethering. Android's tethering
+            stack is exactly what Cell2Pc avoids; the cable only carries the
+            tunnel, and the phone still opens its own cellular sockets the same
+            way it does over Wi-Fi Direct.
+          </div>
+
           <h2 id="how">How it works</h2>
           <p>Three pieces. The middle one is where the idea lives.</p>
+
+          <h3>Two transports, one tunnel</h3>
+          <p>The link is a dumb pipe either way — nothing above it changes.</p>
+          <table>
+            <tr><th>Transport</th><th>Measured</th><th>Reach for it when</th></tr>
+            <tr><td>Wi-Fi Direct</td><td>156 / 101 Mbps</td><td>The phone stays in your pocket</td></tr>
+            <tr><td>USB</td><td>284 / 245 Mbps</td><td>Wi-Fi is congested, or you want the phone charging</td></tr>
+          </table>
 
           <h3>The virtual adapter</h3>
           <p>Wintun on Windows, <code>/dev/net/tun</code> on Linux. A real network interface is why every application works with no configuration — the main advantage over proxy-based tools, which only cover apps you configure.</p>
@@ -915,6 +1041,14 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   var COLD = '#1C2430', EMBER = '#FF6B35', LIVE = '#4ADE80',
       TRACE = '#7A879B', FAINT = '#4A5568', VOID = '#07090E';
 
+  // The two transports, alternated so the scope shows both rather than
+  // fixing on one. Rates are the measured figures for each.
+  var modes = [
+    { link: 'Link · 5 GHz Wi-Fi Direct', via: 'Wi-Fi Direct', dn: 156, up: 101, rate: 0.607 },
+    { link: 'Link · USB cable',          via: 'USB',          dn: 284, up: 245, rate: 0.537 }
+  ];
+  var mode = 0;
+
   var nodes = [
     { x: 0.09, label: 'YOUR PC',  sub: 'any app' },
     { x: 0.38, label: 'PHONE',    sub: 'Cell2Pc' },
@@ -934,10 +1068,11 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   }
 
   function spawn() {
-    // 156:101 down to up, so the picture matches the measurement.
+    // The down:up ratio comes from whichever transport is showing, so the
+    // picture always matches the numbers beside it.
     packets.push({
       t: 0,
-      down: Math.random() < 0.607,
+      down: Math.random() < modes[mode].rate,
       speed: 0.0028 + Math.random() * 0.0024,
       lane: (Math.random() - 0.5) * 22,
       size: 1.3 + Math.random() * 1.6
@@ -1055,9 +1190,35 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
     });
   }
 
-  var last = 0;
+  function showMode(next) {
+    mode = next;
+    var m = modes[mode];
+    var label = document.getElementById('linkmode');
+    if (label) label.textContent = m.link;
+
+    // Count to the new figures rather than snapping, so the change reads as a
+    // measurement rather than a flicker.
+    ['dn', 'up'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var from = parseFloat(el.textContent) || 0;
+      var to = id === 'dn' ? m.dn : m.up;
+      var t0 = null;
+      requestAnimationFrame(function step(ts) {
+        if (!t0) t0 = ts;
+        var k = Math.min((ts - t0) / 700, 1);
+        var e = 1 - Math.pow(1 - k, 3);
+        el.textContent = (from + (to - from) * e).toFixed(1);
+        if (k < 1) requestAnimationFrame(step);
+      });
+    });
+  }
+
+  var last = 0, swapped = 0;
   function frame(now) {
     if (now - last > 78) { spawn(); last = now; }
+    // Long enough that it does not fight the content for attention.
+    if (now - swapped > 7000) { showMode((mode + 1) % modes.length); swapped = now; }
     draw(now);
     requestAnimationFrame(frame);
   }
@@ -1075,25 +1236,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
   }
 })();
 
-/* The headline rate figures count up once, so the measurement registers as a
-   measurement rather than as decoration. */
-(function () {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  [['dn', 156], ['up', 101]].forEach(function (pair) {
-    var el = document.getElementById(pair[0]);
-    if (!el) return;
-    var target = pair[1], start = null;
-
-    requestAnimationFrame(function step(ts) {
-      if (!start) start = ts;
-      var k = Math.min((ts - start) / 1100, 1);
-      var eased = 1 - Math.pow(1 - k, 3);
-      el.textContent = (target * eased).toFixed(1);
-      if (k < 1) requestAnimationFrame(step);
-    });
-  });
-})();
 </script>
 
 </body>
