@@ -497,6 +497,29 @@ strong { color: var(--signal); font-weight: 500; }
   .versus td:first-child { width: 30%; }
 }
 
+
+/* Use cases: short pieces in two columns, separated by rules rather than
+   boxed. The page already spends its borders on the comparison table and the
+   claim, and six more boxes would flatten the hierarchy. */
+.cases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0 clamp(24px, 3vw, 48px);
+}
+.case {
+  padding: 20px 0;
+  border-top: 1px solid var(--rule);
+}
+.case h3 {
+  color: var(--signal);
+  margin-bottom: 7px;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  transition: color 0.25s var(--ease);
+}
+.case:hover h3 { color: var(--ember); }
+.case p { font-size: 14px; color: var(--trace); margin: 0; max-width: 46ch; }
+
 /* --------------------------------------------------------------- stats -- */
 
 .readout {
@@ -727,6 +750,78 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           <span class="was">Fifteen minutes of setup</span>
           <span class="now">One button</span>
           <p>The PC remembers the pairing and connects itself the next time.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>When you'd reach for it</h2>
+          <p>
+            The pattern is the same every time: you have a laptop, you have
+            signal, and the thing in between is the problem.
+          </p>
+        </div>
+        <div>
+          <div class="cases">
+
+            <article class="case">
+              <h3>Working somewhere with bad Wi-Fi</h3>
+              <p>
+                Cafe networks are slow, captive portals log you out, and hotel
+                Wi-Fi charges per device. Your phone already has a better
+                connection than any of them — this hands it to the laptop.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>On a train, in a car, in a field</h3>
+              <p>
+                Anywhere there is no Wi-Fi at all. The phone is charged and in
+                your pocket, which is exactly the device a mobile router keeps
+                failing to be.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>The home line is down</h3>
+              <p>
+                Outages happen mid-deadline. A laptop back online in under a
+                minute, on a connection you already pay for, is the difference
+                between a delay and a lost day.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Travelling with one SIM</h3>
+              <p>
+                A local SIM in the phone covers the laptop too. No roaming
+                router, no second data plan, no hunting for a shop that sells
+                one at the airport.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Pushing a release from a hotel room</h3>
+              <p>
+                Large uploads over a shared network are miserable. A tunnel of
+                your own, measured at 156 Mbps down and 101 up over LTE,
+                usually beats the building's connection outright.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>A second machine, briefly</h3>
+              <p>
+                A colleague's laptop, a test box, a machine being set up before
+                it has network. Up to four PCs share one phone, each paired
+                separately and each revocable.
+              </p>
+            </article>
+
+          </div>
         </div>
       </div>
     </section>
