@@ -3,419 +3,581 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cell2Pc — your PC on the phone's mobile data</title>
-<meta name="description" content="Share an Android phone's cellular data with a Windows or Linux PC over Wi-Fi Direct. No root, no system hotspot. Every application works with no configuration.">
+<title>Cell2Pc</title>
+<meta name="description" content="Share an Android phone's cellular data with a Windows or Linux PC over Wi-Fi Direct. No root, no hotspot, no tethering stack.">
 
-<!--
-  One self-contained file: no build step, no dependencies, opens from disk and
-  hosts anywhere. Palette and type match the app itself, so the site and the
-  product look like the same thing rather than two designs that happen to share
-  a name.
--->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
 <style>
-  :root {
-    /* Taken from the app's Theme.kt so the two cannot drift. */
-    --ink: #0A0C10;
-    --surface-1: #12151C;
-    --surface-2: #1A1F28;
-    --surface-3: #232935;
-    --divider: #2A3140;
-    --text-1: #F2F5FA;
-    --text-2: #9AA5B8;
-    --text-3: #5F6B7F;
-    --green: #3DDC91;
-    --green-dim: #1E6B4A;
-    --blue: #4C9AFF;
-    --amber: #FFB020;
-    --red: #FF5C5C;
-    --mono: "SF Mono", Consolas, Menlo, "DejaVu Sans Mono", monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
-    --radius: 14px;
-    --max: 1080px;
+/* ---------------------------------------------------------------------------
+   Cell2Pc
+
+   The visual language is borrowed from the instruments this thing belongs
+   beside: spectrum analysers, packet captures, throughput traces. Cold ground,
+   one warm carrier-signal accent, monospace as the display face because the
+   product speaks in byte counts.
+
+   Deliberately committed to a single dark world - an RF instrument does not
+   have a light mode - so no theme media queries, but every colour is painted
+   explicitly so the page holds on any host ground.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* Ground: near-black with a blue bias, the way a signal display reads. */
+  --void:    #07090E;
+  --panel:   #0E1219;
+  --raised:  #151B25;
+  --rule:    #1C2430;
+
+  --signal:  #E8EDF5;
+  --trace:   #7A879B;
+  --faint:   #4A5568;
+
+  /* The carrier. Warm against a cold ground; deliberately not the green
+     that every dark landing page reaches for. */
+  --ember:   #FF6B35;
+  --ember-d: #C24A1F;
+
+  /* Reserved for live state only, so green means "running" and nothing else. */
+  --live:    #4ADE80;
+
+  --display: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --body:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --measure: 68ch;
+  --gutter:  clamp(20px, 5vw, 48px);
+  --max:     1140px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--signal);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
 
-  html { scroll-behavior: smooth; }
+a { color: var(--ember); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
 
-  body {
-    background: var(--ink);
-    color: var(--text-1);
-    font-family: var(--sans);
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
+/* --------------------------------------------------------------- shell -- */
 
-  a { color: var(--green); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+.shell { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 
-  code {
-    font-family: var(--mono);
-    font-size: 0.9em;
-    background: var(--surface-2);
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: var(--text-1);
-  }
+/* The spine: a measurement rule running the length of the page, ticked like a
+   captured trace. It is the page's structure made visible, not decoration -
+   each tick marks a section boundary. */
+.spine {
+  position: fixed;
+  left: max(calc((100vw - var(--max)) / 2 + 18px), 18px);
+  top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent, var(--rule) 8%, var(--rule) 92%, transparent);
+  z-index: 1;
+  pointer-events: none;
+}
+.spine::before {
+  content: "";
+  position: absolute;
+  left: -3px; top: 12%;
+  width: 7px; height: 7px;
+  background: var(--ember);
+  box-shadow: 0 0 14px var(--ember);
+}
+@media (max-width: 900px) { .spine { display: none; } }
 
-  pre {
-    font-family: var(--mono);
-    font-size: 13px;
-    background: var(--surface-1);
-    border: 1px solid var(--divider);
-    border-radius: 10px;
-    padding: 16px;
-    overflow-x: auto;
-    line-height: 1.65;
-    color: var(--text-2);
-  }
-  pre code { background: none; padding: 0; }
+/* ----------------------------------------------------------------- nav -- */
 
-  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+header {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--void) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--rule);
+}
+nav {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 16px var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 4vw, 36px);
+}
+.mark {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.5px;
+  color: var(--signal);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mark:hover { text-decoration: none; }
+.mark .pulse {
+  width: 7px; height: 7px;
+  background: var(--live);
+  border-radius: 50%;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 60%, transparent); }
+  50%      { opacity: 0.5; box-shadow: 0 0 0 5px transparent; }
+}
+.links { margin-left: auto; display: flex; gap: clamp(14px, 3vw, 30px); align-items: center; }
+.links a {
+  color: var(--trace);
+  font-size: 13px;
+  font-family: var(--display);
+  letter-spacing: 0.2px;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.18s, border-color 0.18s;
+}
+.links a:hover { color: var(--signal); text-decoration: none; }
+.links a.on { color: var(--ember); border-bottom-color: var(--ember); }
 
-  /* ---------------------------------------------------------------- nav -- */
+/* --------------------------------------------------------------- views -- */
 
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: rgba(10, 12, 16, 0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--divider);
-  }
-  nav {
-    max-width: var(--max);
-    margin: 0 auto;
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    gap: 28px;
-  }
-  .brand {
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--text-1);
-    letter-spacing: -0.3px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-  }
-  .brand:hover { text-decoration: none; }
-  .dot {
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 12px rgba(61, 220, 145, 0.6);
-  }
-  .nav-links { margin-left: auto; display: flex; gap: 24px; align-items: center; }
-  .nav-links a { color: var(--text-2); font-size: 14px; }
-  .nav-links a:hover { color: var(--text-1); text-decoration: none; }
-  .nav-links a.active { color: var(--green); }
+.view { display: none; }
+.view.on { display: block; }
 
-  /* -------------------------------------------------------------- views -- */
+/* ---------------------------------------------------------------- hero -- */
 
-  .view { display: none; padding: 64px 0 96px; }
-  .view.active { display: block; animation: fade 0.25s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.hero { padding: clamp(56px, 9vw, 104px) 0 clamp(40px, 6vw, 72px); }
 
-  /* --------------------------------------------------------------- hero -- */
+.eyebrow {
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: var(--ember);
+  margin: 0 0 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ember-d), transparent);
+  max-width: 180px;
+}
 
-  .hero { text-align: center; padding: 40px 0 24px; }
-  .hero h1 {
-    font-size: clamp(34px, 6vw, 56px);
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    margin-bottom: 18px;
-  }
-  .hero h1 .accent { color: var(--green); }
-  .hero p.lead {
-    font-size: clamp(16px, 2.4vw, 19px);
-    color: var(--text-2);
-    max-width: 620px;
-    margin: 0 auto 32px;
-  }
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(32px, 6.6vw, 66px);
+  line-height: 1.04;
+  letter-spacing: -2.5px;
+  margin: 0 0 26px;
+  text-wrap: balance;
+  max-width: 16ch;
+}
+h1 em { font-style: normal; color: var(--ember); }
 
-  .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 36px; }
-  .badge {
-    font-size: 12px;
-    color: var(--text-2);
-    background: var(--surface-1);
-    border: 1px solid var(--divider);
-    border-radius: 100px;
-    padding: 5px 13px;
-  }
-  .badge b { color: var(--green); font-weight: 600; }
+.lede {
+  font-size: clamp(16px, 2vw, 19px);
+  color: var(--trace);
+  max-width: 56ch;
+  margin: 0 0 36px;
+  line-height: 1.7;
+}
+.lede strong { color: var(--signal); font-weight: 500; }
 
-  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 22px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn:hover { text-decoration: none; }
-  .btn-primary { background: var(--green); color: var(--ink); }
-  .btn-primary:hover { background: #35C482; }
-  .btn-ghost { background: var(--surface-2); color: var(--text-1); border-color: var(--divider); }
-  .btn-ghost:hover { background: var(--surface-3); }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
-  /* ------------------------------------------------------------ diagram -- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 13px 24px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+.btn:hover { text-decoration: none; transform: translateY(-1px); }
+.btn-solid  { background: var(--ember); color: var(--void); }
+.btn-solid:hover { background: #FF7F4F; }
+.btn-line   { border-color: var(--rule); color: var(--signal); background: transparent; }
+.btn-line:hover { border-color: var(--ember); color: var(--ember); }
 
-  .diagram {
-    margin: 56px auto;
-    max-width: 760px;
-    background: var(--surface-1);
-    border: 1px solid var(--divider);
-    border-radius: var(--radius);
-    padding: 28px 24px;
-  }
-  .flow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
-  .node {
-    background: var(--surface-2);
-    border: 1px solid var(--divider);
-    border-radius: 10px;
-    padding: 14px 18px;
-    text-align: center;
-    min-width: 116px;
-  }
-  .node .label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; }
-  .node .value { font-size: 14px; font-weight: 600; margin-top: 3px; }
-  .arrow { color: var(--green); font-size: 20px; opacity: 0.7; }
-  .diagram .note {
-    text-align: center;
-    font-size: 13px;
-    color: var(--text-3);
-    margin-top: 20px;
-    padding-top: 18px;
-    border-top: 1px solid var(--divider);
-  }
+/* -------------------------------------------------------------- canvas -- */
 
-  /* ------------------------------------------------------------ content -- */
+/* The mechanism, shown before it is explained: packets crossing the link at
+   the throughput actually measured. */
+.scope {
+  margin: clamp(40px, 6vw, 68px) 0 0;
+  border: 1px solid var(--rule);
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    repeating-linear-gradient(0deg, transparent, transparent 39px,
+      color-mix(in srgb, var(--rule) 55%, transparent) 39px,
+      color-mix(in srgb, var(--rule) 55%, transparent) 40px);
+}
+.scope-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--faint);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.scope-head .rate { color: var(--live); letter-spacing: 0.6px; }
+#flow { display: block; width: 100%; height: 190px; }
+.scope-foot {
+  padding: 13px 18px;
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--faint);
+  line-height: 1.6;
+}
+.scope-foot b { color: var(--trace); font-weight: 500; }
 
-  section { margin: 76px 0; }
-  h2 {
-    font-size: clamp(24px, 3.4vw, 30px);
-    font-weight: 700;
-    letter-spacing: -0.6px;
-    margin-bottom: 12px;
-  }
-  h3 { font-size: 18px; font-weight: 650; margin: 32px 0 10px; }
-  h4 { font-size: 15px; font-weight: 650; margin: 22px 0 8px; color: var(--text-1); }
-  section > p, .prose p { color: var(--text-2); max-width: 720px; margin-bottom: 14px; }
+/* ------------------------------------------------------------- content -- */
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 28px; }
-  .card {
-    background: var(--surface-1);
-    border: 1px solid var(--divider);
-    border-radius: var(--radius);
-    padding: 22px;
-  }
-  .card h3 { margin: 0 0 8px; font-size: 16px; }
-  .card p { font-size: 14px; color: var(--text-2); margin: 0; }
-  .card .icon { font-size: 20px; margin-bottom: 10px; display: block; }
+section { padding: clamp(56px, 8vw, 96px) 0; border-top: 1px solid var(--rule); }
+section:first-of-type { border-top: none; }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 28px; }
-  .stat { background: var(--surface-1); border: 1px solid var(--divider); border-radius: var(--radius); padding: 20px; }
-  .stat .n { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--green); }
-  .stat .n.blue { color: var(--blue); }
-  .stat .l { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px; }
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(23px, 3.4vw, 34px);
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0 0 8px;
+}
+p { max-width: var(--measure); margin: 0 0 16px; color: var(--trace); }
+p.tight { max-width: 60ch; }
+strong { color: var(--signal); font-weight: 500; }
 
-  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14px; }
-  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--divider); }
-  th { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 600; }
-  td { color: var(--text-2); }
-  td:first-child { color: var(--text-1); }
+/* Not every block is a card. The contrast panel is spent once, on the claim
+   that carries the product. */
+.claim {
+  border-left: 2px solid var(--ember);
+  padding: 4px 0 4px 24px;
+  margin: 32px 0;
+}
+.claim p { color: var(--signal); font-size: 17px; max-width: 58ch; margin: 0; }
 
-  .callout {
-    background: var(--surface-1);
-    border: 1px solid var(--divider);
-    border-left: 3px solid var(--green);
-    border-radius: 8px;
-    padding: 16px 18px;
-    margin: 20px 0;
-    font-size: 14px;
-    color: var(--text-2);
-  }
-  .callout.warn { border-left-color: var(--amber); }
-  .callout strong { color: var(--text-1); }
+.note {
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  padding: 18px 20px;
+  margin: 28px 0;
+  font-size: 14px;
+  color: var(--trace);
+  max-width: var(--measure);
+}
+.note strong { color: var(--signal); }
 
-  ul, ol { color: var(--text-2); margin: 12px 0 12px 22px; }
-  li { margin-bottom: 7px; }
+/* ------------------------------------------------------------ features -- */
 
-  /* --------------------------------------------------------------- docs -- */
+/* A definition list, not a card grid: these are terms with explanations, and
+   the rule between them is enough separation. */
+.terms { display: grid; gap: 0; margin-top: 36px; }
+.term {
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  gap: clamp(16px, 4vw, 40px);
+  padding: 22px 0;
+  border-top: 1px solid var(--rule);
+  align-items: start;
+}
+.term:last-child { border-bottom: 1px solid var(--rule); }
+.term dt {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ember);
+  letter-spacing: -0.2px;
+  padding-top: 2px;
+}
+.term dd { margin: 0; color: var(--trace); font-size: 15px; max-width: 62ch; }
+@media (max-width: 640px) {
+  .term { grid-template-columns: 1fr; gap: 6px; }
+}
 
-  .docs-layout { display: grid; grid-template-columns: 210px 1fr; gap: 48px; align-items: start; }
-  .toc { position: sticky; top: 84px; }
-  .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin: 0 0 12px; }
-  .toc a { display: block; color: var(--text-2); font-size: 14px; padding: 5px 0; }
-  .toc a:hover { color: var(--green); text-decoration: none; }
+/* --------------------------------------------------------------- stats -- */
 
-  /* ------------------------------------------------------------- footer -- */
+.readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  border: 1px solid var(--rule);
+  margin-top: 32px;
+}
+.cell {
+  padding: 22px 20px;
+  border-right: 1px solid var(--rule);
+}
+.cell:last-child { border-right: none; }
+@media (max-width: 620px) {
+  .cell { border-right: none; border-bottom: 1px solid var(--rule); }
+  .cell:last-child { border-bottom: none; }
+}
+.cell .v {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: var(--signal);
+  line-height: 1;
+}
+.cell .v .u { font-size: 13px; color: var(--faint); letter-spacing: 0; margin-left: 4px; }
+.cell .k {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 9px;
+}
 
-  footer {
-    border-top: 1px solid var(--divider);
-    padding: 32px 0;
-    color: var(--text-3);
-    font-size: 13px;
-  }
-  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+/* ---------------------------------------------------------------- docs -- */
 
-  @media (max-width: 860px) {
-    .docs-layout { grid-template-columns: 1fr; gap: 24px; }
-    .toc { position: static; }
-    .nav-links { gap: 16px; }
-    .flow { flex-direction: column; }
-    .arrow { transform: rotate(90deg); }
-  }
+.doc-grid { display: grid; grid-template-columns: 190px 1fr; gap: clamp(28px, 6vw, 64px); align-items: start; }
+@media (max-width: 880px) { .doc-grid { grid-template-columns: 1fr; } }
+
+.toc { position: sticky; top: 84px; }
+@media (max-width: 880px) { .toc { position: static; } }
+.toc .h {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 14px;
+}
+.toc a {
+  display: block;
+  color: var(--trace);
+  font-size: 14px;
+  padding: 6px 0 6px 14px;
+  border-left: 1px solid var(--rule);
+  transition: color 0.16s, border-color 0.16s;
+}
+.toc a:hover { color: var(--ember); border-left-color: var(--ember); text-decoration: none; }
+
+.prose h2 { margin-top: 8px; scroll-margin-top: 90px; }
+.prose h2 + p { margin-top: 0; }
+.prose h3 { margin-top: 34px; }
+.prose ol, .prose ul { color: var(--trace); max-width: var(--measure); padding-left: 20px; }
+.prose li { margin-bottom: 8px; }
+
+code {
+  font-family: var(--display);
+  font-size: 0.88em;
+  color: var(--ember);
+  background: var(--panel);
+  padding: 2px 6px;
+  border: 1px solid var(--rule);
+}
+pre {
+  font-family: var(--display);
+  font-size: 12.5px;
+  line-height: 1.75;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  padding: 18px;
+  overflow-x: auto;
+  margin: 18px 0;
+  color: var(--trace);
+  max-width: var(--measure);
+}
+pre code { background: none; border: none; padding: 0; color: inherit; }
+pre .c { color: var(--faint); }
+
+table { border-collapse: collapse; width: 100%; max-width: var(--measure); margin: 20px 0; font-size: 14px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--rule); }
+th {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 400;
+}
+td { color: var(--trace); }
+td:first-child { color: var(--signal); }
+
+/* ------------------------------------------------------------ download -- */
+
+.platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); border: 1px solid var(--rule); margin-top: 36px; }
+.plat { padding: 26px 24px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; }
+.plat:last-child { border-right: none; }
+@media (max-width: 720px) {
+  .plat { border-right: none; border-bottom: 1px solid var(--rule); }
+  .plat:last-child { border-bottom: none; }
+}
+.plat .os { font-family: var(--display); font-size: 15px; font-weight: 700; }
+.plat .req { font-size: 13px; color: var(--faint); flex: 1; }
+.plat .btn { margin-top: 12px; justify-content: center; }
+
+/* -------------------------------------------------------------- footer -- */
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 30px 0;
+  font-size: 13px;
+  color: var(--faint);
+}
+footer .shell { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+footer .mono { font-family: var(--display); font-size: 12px; }
 </style>
 </head>
 <body>
 
+<div class="spine" aria-hidden="true"></div>
+
 <header>
-  <nav class="wrap" style="padding-left:0;padding-right:0">
-    <a href="#/" class="brand"><span class="dot"></span>Cell2Pc</a>
-    <div class="nav-links">
-      <a href="#/" data-nav="home">Overview</a>
-      <a href="#/docs" data-nav="docs">Docs</a>
-      <a href="#/download" data-nav="download">Download</a>
+  <nav>
+    <a href="#/" class="mark"><span class="pulse"></span>CELL2PC</a>
+    <div class="links">
+      <a href="#/" data-v="home">Overview</a>
+      <a href="#/docs" data-v="docs">Docs</a>
+      <a href="#/get" data-v="get">Download</a>
       <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">Source</a>
     </div>
   </nav>
 </header>
 
 <!-- ============================================================== home == -->
-<main id="home" class="view active">
-  <div class="wrap">
+<main id="home" class="view on">
+  <div class="shell">
 
     <div class="hero">
-      <h1>Your PC on the phone's <span class="accent">mobile data</span></h1>
-      <p class="lead">
-        Cell2Pc shares an Android phone's cellular connection with a Windows or
-        Linux PC over Wi-Fi Direct. No root, no system hotspot, and every
-        application works without being configured.
+      <p class="eyebrow">Android → Wi-Fi Direct → your PC</p>
+      <h1>Your PC on the phone's <em>mobile data</em></h1>
+      <p class="lede">
+        Not a hotspot. Your PC's packets stop at the phone, which opens
+        <strong>its own connections</strong> on the cellular interface and
+        copies the bytes across. Nothing forwards a packet, so nothing on the
+        network sees a second device.
       </p>
-      <div class="badges">
-        <span class="badge"><b>156 Mbps</b> measured over LTE</span>
-        <span class="badge">No root required</span>
-        <span class="badge">Windows &amp; Linux</span>
-        <span class="badge">AES-GCM encrypted</span>
-      </div>
-      <div class="cta">
-        <a href="#/download" class="btn btn-primary">Download</a>
-        <a href="#/docs" class="btn btn-ghost">Read the docs</a>
+      <div class="actions">
+        <a href="#/get" class="btn btn-solid">Download</a>
+        <a href="#/docs" class="btn btn-line">How it works</a>
       </div>
     </div>
 
-    <div class="diagram">
-      <div class="flow">
-        <div class="node"><div class="label">Your PC</div><div class="value">Any app</div></div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="label">Link</div><div class="value">Wi-Fi Direct</div></div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="label">Phone</div><div class="value">Cell2Pc</div></div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="label">Carrier</div><div class="value">Mobile data</div></div>
+    <div class="scope">
+      <div class="scope-head">
+        <span>Link · 5 GHz Wi-Fi Direct</span>
+        <span class="rate" id="rate">156.0 Mbps ↓ · 101.0 Mbps ↑ · 1.7 ms</span>
       </div>
-      <p class="note">
-        The phone never forwards a packet. It opens its own connections, so the
-        traffic leaving it is ordinary app traffic.
+      <canvas id="flow" width="1100" height="190" aria-label="Packets crossing from the PC through the phone to the cellular network"></canvas>
+      <p class="scope-foot">
+        Measured on a <b>Galaxy A53 over LTE</b>. The link runs well above the
+        cellular connection it carries, which is the number that matters — the
+        tunnel is not the bottleneck.
       </p>
     </div>
 
     <section>
-      <h2>Not tethering</h2>
+      <h2>Why it isn't tethering</h2>
       <p>
-        A normal hotspot hands your PC to the carrier's tethering stack, which is
-        what gets metered separately or blocked outright. Cell2Pc does something
-        different: your PC's packets stop at the phone, and the app opens fresh
-        connections of its own on the cellular interface.
+        A hotspot hands your PC to the carrier's tethering stack. That stack is
+        the thing that gets metered separately, throttled, or refused outright.
       </p>
       <p>
-        The result is that nothing on the network sees a second device, because
-        at the IP layer there isn't one. This is architecture, not a trick —
-        there is no TTL rewriting or fingerprint spoofing anywhere in it.
+        Cell2Pc never touches it. The phone reads your PC's TCP and UDP streams
+        and opens ordinary Android sockets to the same destinations, bound to
+        the cellular interface. It copies bytes between the two.
       </p>
-      <div class="callout warn">
-        <strong>Worth being clear:</strong> this makes the traffic identical to
-        app traffic at the IP layer. It is not a claim of undetectability by
-        other means, and whether you may use it is between you and your carrier's
-        terms.
+      <div class="claim">
+        <p>
+          What leaves the phone is one app making ordinary connections. There is
+          no forwarded packet, because at the IP layer there is no second device.
+        </p>
+      </div>
+      <div class="note">
+        <strong>Stated plainly:</strong> this makes the traffic architecturally
+        identical to app traffic. It is not a claim of undetectability by other
+        means, and there is no TTL rewriting or fingerprint spoofing anywhere in
+        it. Whether you may use it is between you and your carrier's terms.
       </div>
     </section>
 
     <section>
-      <h2>What you get</h2>
-      <div class="grid">
-        <div class="card">
-          <span class="icon">◈</span>
-          <h3>Every application</h3>
-          <p>A real virtual network adapter, so browsers, Steam, Windows Update and games all work. No proxy settings, nothing per-app.</p>
+      <h2>What it does</h2>
+      <dl class="terms">
+        <div class="term">
+          <dt>Every app</dt>
+          <dd>A real virtual network adapter, so browsers, Steam, Windows Update and games work untouched. No proxy settings, nothing per-application.</dd>
         </div>
-        <div class="card">
-          <span class="icon">⇉</span>
-          <h3>Four parallel links</h3>
-          <p>Traffic is spread across several connections, so one lost Wi-Fi frame stalls a quarter of it rather than freezing everything.</p>
+        <div class="term">
+          <dt>Four links</dt>
+          <dd>Traffic is spread across four parallel connections. One lost Wi-Fi frame stalls a quarter of it instead of freezing everything — the failure that makes older tools feel unreliable.</dd>
         </div>
-        <div class="card">
-          <span class="icon">⟳</span>
-          <h3>Reconnects itself</h3>
-          <p>If the link drops, the adapter stays up and the tunnel rebuilds underneath it, so applications keep their connections.</p>
+        <div class="term">
+          <dt>Reconnects</dt>
+          <dd>When the link drops the adapter stays up and the tunnel rebuilds underneath it, so applications keep their connections rather than seeing the network vanish.</dd>
         </div>
-        <div class="card">
-          <span class="icon">⊘</span>
-          <h3>Data caps</h3>
-          <p>Usage tracked per day and per billing cycle, anchored on your carrier's cycle day. Set a cap and it stops before you overspend.</p>
+        <div class="term">
+          <dt>Data caps</dt>
+          <dd>Usage tracked per day and per billing cycle, anchored on your carrier's cycle day rather than the calendar month. At the cap it refuses new connections instead of cutting you off.</dd>
         </div>
-        <div class="card">
-          <span class="icon">⚿</span>
-          <h3>Encrypted</h3>
-          <p>A pairing code authorises each PC, and every frame is sealed with AES-GCM keyed from it. Joining the Wi-Fi is not enough.</p>
+        <div class="term">
+          <dt>Encrypted</dt>
+          <dd>A pairing code authorises each PC and keys AES-GCM on every frame. Joining the Wi-Fi is not enough to use the connection or read it.</dd>
         </div>
-        <div class="card">
-          <span class="icon">▦</span>
-          <h3>Several PCs</h3>
-          <p>Up to four machines share one phone, each with its own streams and its own DNS cache.</p>
+        <div class="term">
+          <dt>Four PCs</dt>
+          <dd>Several machines share one phone, each with its own streams, NAT table and DNS cache.</dd>
         </div>
-      </div>
+      </dl>
     </section>
 
     <section>
       <h2>Measured, not estimated</h2>
-      <p>On a Galaxy A53 over LTE, with the link and the tunnel timed separately.</p>
-      <div class="stats">
-        <div class="stat"><div class="n">156</div><div class="l">Mbps down</div></div>
-        <div class="stat"><div class="n blue">101</div><div class="l">Mbps up</div></div>
-        <div class="stat"><div class="n">1.7</div><div class="l">ms latency</div></div>
-        <div class="stat"><div class="n">77</div><div class="l">tests passing</div></div>
+      <p class="tight">The link and the tunnel were timed separately, so a slow result could be attributed to one or the other rather than guessed at.</p>
+      <div class="readout">
+        <div class="cell"><div class="v">156<span class="u">Mbps</span></div><div class="k">Down</div></div>
+        <div class="cell"><div class="v">101<span class="u">Mbps</span></div><div class="k">Up</div></div>
+        <div class="cell"><div class="v">1.7<span class="u">ms</span></div><div class="k">Latency</div></div>
+        <div class="cell"><div class="v">77</div><div class="k">Tests passing</div></div>
       </div>
-      <p style="margin-top:18px;font-size:14px;color:var(--text-3)">
-        The link comfortably exceeds the cellular connection it carries, which is
-        the number that matters: the tunnel is not the bottleneck.
-      </p>
-    </section>
-
-    <section>
-      <h2>How it actually works</h2>
-      <p>
-        Windows sees a virtual network adapter and routes everything through it.
-        The client reads those raw IP packets, works out which are TCP and which
-        are UDP, and multiplexes them over the Wi-Fi Direct link.
-      </p>
-      <p>
-        On the phone, the app parses each stream and opens a <em>real</em> Android
-        socket to the destination, bound explicitly to the cellular network. It
-        copies bytes between the two. That is the whole idea — and it is why no
-        root and no tethering stack are involved.
-      </p>
-      <a href="#/docs" class="btn btn-ghost" style="margin-top:8px">Full architecture →</a>
     </section>
 
   </div>
@@ -423,207 +585,326 @@
 
 <!-- ============================================================== docs == -->
 <main id="docs" class="view">
-  <div class="wrap">
-    <div class="docs-layout">
+  <div class="shell">
+    <section style="border-top:none">
+      <div class="doc-grid">
 
-      <aside class="toc">
-        <h4>Contents</h4>
-        <a href="#/docs#start">Getting started</a>
-        <a href="#/docs#cli">Command line</a>
-        <a href="#/docs#trouble">Troubleshooting</a>
-        <a href="#/docs#how">How it works</a>
-        <a href="#/docs#security">Security</a>
-        <a href="#/docs#build">Building</a>
-      </aside>
+        <aside class="toc">
+          <p class="h">Contents</p>
+          <a href="#/docs#start">Getting started</a>
+          <a href="#/docs#cli">Command line</a>
+          <a href="#/docs#fix">When it breaks</a>
+          <a href="#/docs#how">How it works</a>
+          <a href="#/docs#sec">Security</a>
+          <a href="#/docs#build">Building</a>
+        </aside>
 
-      <div class="prose">
-        <h2 id="start">Getting started</h2>
+        <div class="prose">
+          <h2 id="start">Getting started</h2>
+          <p>You need both halves — the phone app and one desktop app. They work as a pair.</p>
 
-        <h3>1. On the phone</h3>
-        <p>Open Cell2Pc and tap <strong>Wi-Fi Direct</strong>. It shows a pairing code and a Wi-Fi passphrase — you need both, once.</p>
+          <h3>On the phone</h3>
+          <p>Open Cell2Pc and tap <strong>Wi-Fi Direct</strong>. It shows a pairing code and a Wi-Fi passphrase.</p>
 
-        <h3>2. On the PC</h3>
-        <p>Run Cell2Pc, enter the pairing code, press Connect. It joins the phone's network itself and asks for elevation only at that point, because creating a network adapter is privileged.</p>
+          <h3>On the PC</h3>
+          <p>Run Cell2Pc, enter the pairing code, press Connect. It joins the phone's network itself, and asks for elevation only at that point — creating a network adapter is privileged.</p>
 
-        <div class="callout">
-          The passphrase is only needed the first time. After that the PC remembers
-          both, and can connect on its own whenever the phone starts sharing.
-        </div>
+          <div class="note">
+            The passphrase is only needed once. After that the PC remembers both
+            and can connect on its own whenever the phone starts sharing.
+          </div>
 
-        <h3>Requirements</h3>
-        <table>
-          <tr><th>Phone</th><td>Android 12 or newer, with Wi-Fi Direct</td></tr>
-          <tr><th>PC</th><td>Windows 10/11 x64, or Linux x64 with a tun-capable kernel</td></tr>
-          <tr><th>Rights</th><td>Administrator on Windows, root or CAP_NET_ADMIN on Linux</td></tr>
-        </table>
+          <table>
+            <tr><th>Phone</th><td>Android 12 or newer, with Wi-Fi Direct</td></tr>
+            <tr><th>PC</th><td>Windows 10/11 x64, or Linux x64 with a tun-capable kernel</td></tr>
+            <tr><th>Rights</th><td>Administrator on Windows, root or CAP_NET_ADMIN on Linux</td></tr>
+          </table>
 
-        <h2 id="cli">Command line</h2>
-        <p>Everything the app does is available from a terminal, and <code>--json</code> makes any command scriptable.</p>
-<pre><code>cell2pc                       # prompts for the pairing code
-cell2pc -t k7m2xq4p           # with a known code
-cell2pc connect --for 2h      # disconnect automatically after two hours
-cell2pc status                # is a tunnel running?
-cell2pc doctor                # work out why it will not connect
-cell2pc recover               # restore routing after a crash</code></pre>
+          <h2 id="cli">Command line</h2>
+          <p>Everything the app does is available from a terminal, and <code>--json</code> makes any command scriptable.</p>
+<pre><code>cell2pc                       <span class="c"># prompts for the pairing code</span>
+cell2pc -t k7m2xq4p           <span class="c"># with a known code</span>
+cell2pc connect --for 2h      <span class="c"># disconnect after two hours</span>
+cell2pc status                <span class="c"># is a tunnel running?</span>
+cell2pc doctor                <span class="c"># why it will not connect</span>
+cell2pc recover               <span class="c"># restore routing after a crash</span></code></pre>
 
-        <h4>doctor</h4>
-        <p>Works through platform, privileges, driver, Wi-Fi group, reachability and leftover routes in order, then tells you what to do about anything it finds — rather than reporting that the connection failed.</p>
+          <h3>doctor</h3>
+          <p>Works through platform, privileges, driver, Wi-Fi group, reachability and leftover routes in order, then says what to do about anything it finds — rather than reporting that the connection failed.</p>
 
-        <h2 id="trouble">Troubleshooting</h2>
+          <h2 id="fix">When it breaks</h2>
 
-        <h4>The PC has no internet after a crash</h4>
-        <p>Routing changes are journalled to disk before they are applied and replayed on next start, so this should recover on its own. If it does not:</p>
+          <h3>The PC has no internet after a crash</h3>
+          <p>Routing changes are journalled to disk before they are applied and replayed on next start, so this should recover on its own. If it does not:</p>
 <pre><code>cell2pc recover</code></pre>
-        <p>Or run <strong>Fix my internet</strong> from the Start menu. Disabling and re-enabling the Wi-Fi adapter also clears everything.</p>
+          <p>Or run <strong>Fix my internet</strong> from the Start menu. Disabling and re-enabling the Wi-Fi adapter also clears everything.</p>
 
-        <h4>Some sites load, others do not</h4>
-        <p>Usually MTU. The tunnel probes for it, but a network in the middle can still black-hole large packets. <code>cell2pc doctor</code> will say more.</p>
+          <h3>Some sites load, others do not</h3>
+          <p>Usually MTU. The tunnel probes for it, but a network in the middle can still black-hole large packets. <code>cell2pc doctor</code> will say more.</p>
 
-        <h4>It says "degraded"</h4>
-        <p>Fewer than four links are up. The tunnel still works with one; throughput and stall resistance drop. Usually a weak radio link.</p>
+          <h3>It says degraded</h3>
+          <p>Fewer than four links are up. The tunnel works with one; throughput and stall resistance drop. Usually a weak radio link.</p>
 
-        <h4>Windows warns about the installer</h4>
-        <p>The installer is not code-signed, so SmartScreen does not recognise it. That is a statement about the certificate, not the software. Choose <strong>More info</strong> then <strong>Run anyway</strong>.</p>
+          <h3>Windows warns about the installer</h3>
+          <p>It is not code-signed, so SmartScreen does not recognise it — a statement about the certificate, not the software. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
 
-        <h2 id="how">How it works</h2>
-        <p>Three pieces, and the middle one is where the idea lives.</p>
+          <h2 id="how">How it works</h2>
+          <p>Three pieces. The middle one is where the idea lives.</p>
 
-        <h4>The virtual adapter</h4>
-        <p>Wintun on Windows, <code>/dev/net/tun</code> on Linux. A real network interface means every application works with no configuration — that is the main advantage over proxy-based tools, which only cover apps you configure.</p>
+          <h3>The virtual adapter</h3>
+          <p>Wintun on Windows, <code>/dev/net/tun</code> on Linux. A real network interface is why every application works with no configuration — the main advantage over proxy-based tools, which only cover apps you configure.</p>
 
-        <h4>The tunnel</h4>
-        <p>Raw IP packets are classified and multiplexed across four parallel TCP connections. Four rather than one because a single connection means one lost frame stalls every stream behind it — which is felt as an occasional total freeze rather than as steady slowness.</p>
+          <h3>The tunnel</h3>
+          <p>Raw IP packets are classified and multiplexed across four parallel TCP connections. Four rather than one because a single connection means one lost frame stalls every stream behind it, felt as an occasional total freeze rather than steady slowness.</p>
 
-        <h4>Userspace NAT</h4>
-        <p>The phone never forwards a packet. It parses each stream and opens an ordinary Android socket to the destination, bound explicitly to the cellular network, then copies bytes between the two. Traffic leaves the phone as that app's own traffic, which is exactly why no root and no tethering stack are needed.</p>
+          <h3>Userspace NAT</h3>
+          <p>The phone never forwards a packet. It parses each stream and opens an ordinary Android socket to the destination, bound explicitly to the cellular network, then copies bytes between the two.</p>
 
-        <div class="callout">
-          UDP gets the same treatment, with a socket per flow. Without it, DNS,
-          QUIC and games all break — which is what proxy-based tethering tools
-          usually get wrong.
+          <div class="note">
+            UDP gets the same treatment, with a socket per flow. Without it DNS,
+            QUIC and games all break — which is what proxy-based tethering tools
+            usually get wrong.
+          </div>
+
+          <h2 id="sec">Security</h2>
+          <p>The Wi-Fi group is WPA2, but a group passphrase is shared with every device that ever paired, so it is not a session secret. Two further layers:</p>
+          <ul>
+            <li><strong>Pairing code</strong> — the phone rejects any client that does not present it, so joining the Wi-Fi does not by itself grant use of the connection.</li>
+            <li><strong>AES-GCM</strong> — every frame is sealed with a key derived from that code, so traffic is unreadable to anything else on the link.</li>
+          </ul>
+          <p>Nothing is sent anywhere else. No account, no telemetry, no server — the phone and the PC talk directly.</p>
+
+          <h2 id="build">Building</h2>
+          <p>Requires the .NET 9 SDK; the phone app additionally needs JDK 17 and the Android SDK.</p>
+<pre><code>dotnet build
+dotnet test Cell2Pc.Tests
+
+<span class="c"># Windows — Wintun (amd64) must sit beside the exe</span>
+dotnet publish Cell2Pc.App -c Release -r win-x64 -o dist
+
+<span class="c"># Linux</span>
+dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
+          <p>The desktop client is <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">open source under MIT</a>. The Android app is proprietary.</p>
         </div>
 
-        <h2 id="security">Security</h2>
-        <p>The Wi-Fi group is WPA2, but a group passphrase is shared with every device that ever paired, so it is not a session secret. Two further layers:</p>
-        <ul>
-          <li><strong>Pairing code</strong> — the phone rejects any client that does not present it, so joining the Wi-Fi does not by itself grant use of the connection.</li>
-          <li><strong>AES-GCM</strong> — every frame is sealed with a key derived from that code, so traffic is unreadable to anything else on the link.</li>
-        </ul>
-        <p>Nothing is sent anywhere else. There is no account, no telemetry and no server: the phone and the PC talk directly.</p>
-
-        <h2 id="build">Building</h2>
-        <p>Requires JDK 17, the Android SDK (platform 36), and the .NET 9 SDK.</p>
-<pre><code># Phone
-cd android
-./gradlew assembleDebug
-
-# Desktop
-cd windows/Cell2Pc.App
-dotnet publish -c Release -r win-x64 -o ../../dist
-
-# Everything, including the installer
-packaging\build-release.ps1
-
-# Tests
-packaging\test.ps1</code></pre>
-        <p>Wintun (amd64) from <a href="https://www.wintun.net">wintun.net</a> must sit beside the Windows executable. The installer bundles it.</p>
       </div>
-
-    </div>
+    </section>
   </div>
 </main>
 
-<!-- ========================================================== download == -->
-<main id="download" class="view">
-  <div class="wrap">
-    <div class="hero" style="padding-bottom:8px">
-      <h1>Download</h1>
-      <p class="lead">You need the phone app and the desktop app — they work as a pair.</p>
-    </div>
+<!-- =============================================================== get == -->
+<main id="get" class="view">
+  <div class="shell">
+    <section style="border-top:none">
+      <p class="eyebrow">Version 1.0.0</p>
+      <h2>Download</h2>
+      <p class="tight">You need the phone app and one desktop app. They work as a pair.</p>
 
-    <div class="grid" style="margin-top:40px">
-      <div class="card">
-        <span class="icon">▲</span>
-        <h3>Android</h3>
-        <p style="margin-bottom:16px">Android 12 or newer, with Wi-Fi Direct.</p>
-        <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/Cell2Pc-1.0.0.apk" class="btn btn-primary" style="width:100%;justify-content:center">Download APK</a>
+      <div class="platforms">
+        <div class="plat">
+          <span class="os">Android</span>
+          <span class="req">Android 12 or newer, with Wi-Fi Direct. Signed, but not from the Play Store — allow installation when prompted.</span>
+          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/Cell2Pc-1.0.0.apk">APK · 18 MB</a>
+        </div>
+        <div class="plat">
+          <span class="os">Windows</span>
+          <span class="req">Windows 10 or 11, 64-bit. Bundles the Wintun driver. Needs Administrator to connect.</span>
+          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/Cell2Pc-Setup-1.0.0.exe">Installer · 9 MB</a>
+        </div>
+        <div class="plat">
+          <span class="os">Linux</span>
+          <span class="req">x64, tun-capable kernel, NetworkManager. Needs root or CAP_NET_ADMIN.</span>
+          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/cell2pc-1.0.0-linux-x64.tar.gz">Archive · 9 MB</a>
+        </div>
       </div>
-      <div class="card">
-        <span class="icon">⊞</span>
-        <h3>Windows</h3>
-        <p style="margin-bottom:16px">Windows 10 or 11, 64-bit. Includes the driver.</p>
-        <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/Cell2Pc-Setup-1.0.0.exe" class="btn btn-primary" style="width:100%;justify-content:center">Download installer</a>
-      </div>
-      <div class="card">
-        <span class="icon">⌘</span>
-        <h3>Linux</h3>
-        <p style="margin-bottom:16px">x64, with a tun-capable kernel and NetworkManager.</p>
-        <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/cell2pc-1.0.0-linux-x64.tar.gz" class="btn btn-primary" style="width:100%;justify-content:center">Download archive</a>
-      </div>
-    </div>
 
-    <div class="callout warn" style="margin-top:32px">
-      <strong>The Windows installer is not code-signed.</strong> SmartScreen will
-      say it does not recognise it — a statement about the certificate, not the
-      software. Choose <strong>More info</strong> then <strong>Run anyway</strong>.
-    </div>
+      <div class="note">
+        <strong>The Windows installer is not code-signed.</strong> SmartScreen
+        will say it does not recognise it — that is a statement about the
+        certificate, not the software. Choose <strong>More info</strong>, then
+        <strong>Run anyway</strong>.
+      </div>
 
-    <section>
-      <h2>Then</h2>
-      <ol>
+      <h3 style="margin-top:44px">Then</h3>
+      <ol style="color:var(--trace);max-width:var(--measure);padding-left:20px">
         <li>Open Cell2Pc on the phone and tap <strong>Wi-Fi Direct</strong></li>
         <li>Note the pairing code and passphrase</li>
         <li>Run Cell2Pc on the PC, enter the code, press Connect</li>
       </ol>
-      <p>The <a href="#/docs">documentation</a> covers the rest, including what to do if something goes wrong.</p>
+      <p>The <a href="#/docs">documentation</a> covers the rest, including what to do when something goes wrong.</p>
     </section>
   </div>
 </main>
 
 <footer>
-  <div class="wrap">
-    <span>Cell2Pc — your PC on the phone's mobile data</span>
+  <div class="shell">
+    <span class="mono">CELL2PC · 1.0.0</span>
     <span>Check your carrier's terms before use.</span>
   </div>
 </footer>
 
 <script>
-/*
- * Hash routing.
- *
- * Hash rather than the History API so the file works opened straight from disk
- * and needs no server rewrite rules - the point of shipping one self-contained
- * page. Deep links like #/docs#security still resolve to a section.
- */
+/* ---------------------------------------------------------------------------
+   Routing. Hash-based so the file works opened straight from disk and needs no
+   server rewrite rules; deep links like #/docs#sec still resolve to a section.
+--------------------------------------------------------------------------- */
 (function () {
-  var views = ['home', 'docs', 'download'];
+  var views = ['home', 'docs', 'get'];
 
   function route() {
-    var hash = location.hash.replace(/^#\/?/, '');
-    var parts = hash.split('#');
-    var name = parts[0] || 'home';
-    var anchor = parts[1];
-
-    if (views.indexOf(name) === -1) name = 'home';
+    var raw = location.hash.replace(/^#\/?/, '');
+    var parts = raw.split('#');
+    var name = views.indexOf(parts[0]) >= 0 ? parts[0] : 'home';
 
     views.forEach(function (v) {
-      document.getElementById(v).classList.toggle('active', v === name);
+      document.getElementById(v).classList.toggle('on', v === name);
+    });
+    document.querySelectorAll('[data-v]').forEach(function (a) {
+      a.classList.toggle('on', a.getAttribute('data-v') === name);
     });
 
-    document.querySelectorAll('[data-nav]').forEach(function (a) {
-      a.classList.toggle('active', a.getAttribute('data-nav') === name);
-    });
-
-    if (anchor) {
-      // After the view is visible, or the target has no layout to scroll to.
-      var target = document.getElementById(anchor);
+    if (parts[1]) {
+      var target = document.getElementById(parts[1]);
       if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     }
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    window.scrollTo(0, 0);
   }
 
-  window.addEventListener('hashchange', route);
+  addEventListener('hashchange', route);
   route();
+})();
+
+/* ---------------------------------------------------------------------------
+   The link, drawn.
+
+   Packets crossing PC → phone → carrier, with the ratio of dots per direction
+   taken from the measured 156/101 Mbps. Canvas rather than SVG because these
+   are hundreds of short-lived particles, which is what canvas is for.
+--------------------------------------------------------------------------- */
+(function () {
+  var canvas = document.getElementById('flow');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var COLD = '#1C2430', EMBER = '#FF6B35', LIVE = '#4ADE80', TRACE = '#7A879B', FAINT = '#4A5568';
+
+  var nodes = [
+    { x: 0.10, label: 'YOUR PC',  sub: 'any app' },
+    { x: 0.40, label: 'PHONE',    sub: 'Cell2Pc' },
+    { x: 0.70, label: 'CARRIER',  sub: 'LTE / 5G' },
+    { x: 0.94, label: 'INTERNET', sub: '' }
+  ];
+
+  var packets = [];
+  var w = 0, h = 0, dpr = 1;
+
+  function size() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    w = canvas.clientWidth;
+    h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function spawn() {
+    // Roughly 156:101 down to up, so the picture matches the measurement.
+    var down = Math.random() < 0.607;
+    packets.push({
+      t: 0,
+      down: down,
+      speed: 0.0026 + Math.random() * 0.0022,
+      lane: (Math.random() - 0.5) * 16,
+      size: 1.4 + Math.random() * 1.5
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    var mid = h / 2;
+
+    // The link itself.
+    ctx.strokeStyle = COLD;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(nodes[0].x * w, mid);
+    ctx.lineTo(nodes[3].x * w, mid);
+    ctx.stroke();
+
+    // Where the mechanism actually happens: the phone terminates one side and
+    // originates the other, so that segment is drawn as the accent.
+    ctx.strokeStyle = 'rgba(255,107,53,0.22)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(nodes[1].x * w, mid);
+    ctx.lineTo(nodes[2].x * w, mid);
+    ctx.stroke();
+
+    // Packets.
+    for (var i = packets.length - 1; i >= 0; i--) {
+      var p = packets[i];
+      p.t += p.speed;
+      if (p.t >= 1) { packets.splice(i, 1); continue; }
+
+      var prog = p.down ? 1 - p.t : p.t;
+      var x = (nodes[0].x + (nodes[3].x - nodes[0].x) * prog) * w;
+      var y = mid + p.lane * Math.sin(p.t * Math.PI);
+
+      var fade = Math.sin(p.t * Math.PI);
+      ctx.globalAlpha = 0.25 + fade * 0.65;
+      ctx.fillStyle = p.down ? LIVE : EMBER;
+      ctx.beginPath();
+      ctx.arc(x, y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Nodes.
+    nodes.forEach(function (n, idx) {
+      var x = n.x * w;
+      var isPhone = idx === 1;
+
+      ctx.fillStyle = '#07090E';
+      ctx.fillRect(x - 34, mid - 13, 68, 26);
+
+      ctx.strokeStyle = isPhone ? EMBER : COLD;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - 34, mid - 13, 68, 26);
+
+      ctx.fillStyle = isPhone ? EMBER : TRACE;
+      ctx.font = '700 9px "Space Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.label, x, mid + 3);
+
+      if (n.sub) {
+        ctx.fillStyle = FAINT;
+        ctx.font = '9px "IBM Plex Sans", sans-serif';
+        ctx.fillText(n.sub, x, mid + 30);
+      }
+    });
+  }
+
+  var last = 0;
+  function frame(now) {
+    if (now - last > 90) { spawn(); last = now; }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  addEventListener('resize', size);
+  size();
+
+  if (reduced) {
+    // Still show the mechanism, just without motion.
+    for (var i = 0; i < 26; i++) {
+      packets.push({ t: i / 26, down: i % 3 !== 0, speed: 0, lane: (i % 5 - 2) * 5, size: 2 });
+    }
+    draw();
+  } else {
+    requestAnimationFrame(frame);
+  }
 })();
 </script>
 
