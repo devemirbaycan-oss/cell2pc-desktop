@@ -46,6 +46,10 @@
   --body:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   --measure: 66ch;
+  /* Long-form pages sit in a wide column, so their prose gets a wider
+     measure than the marketing sections - unbounded would run to about
+     200 characters on a large screen, which is unreadable. */
+  --read:    92ch;
   --gutter:  clamp(20px, 4vw, 56px);
   --max:     1680px;
 
@@ -375,7 +379,7 @@ strong { color: var(--signal); font-weight: 500; }
   margin: 26px 0;
   font-size: 14px;
   color: var(--trace);
-  max-width: var(--measure);
+  max-width: var(--read);
 }
 .note strong { color: var(--signal); }
 
@@ -532,7 +536,7 @@ strong { color: var(--signal); font-weight: 500; }
 
 /* ---------------------------------------------------------------- docs -- */
 
-.doc-grid { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: clamp(28px, 5vw, 76px); align-items: start; }
+.doc-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
 @media (max-width: 900px) { .doc-grid { grid-template-columns: 1fr; } }
 
 .toc { position: sticky; top: 82px; }
@@ -558,7 +562,7 @@ strong { color: var(--signal); font-weight: 500; }
 .prose { max-width: none; }
 /* Running text keeps a measure so lines stay readable; everything else in the
    column - tables, code, notes - takes the full width available. */
-.prose > p, .prose > ul, .prose > ol { max-width: var(--measure); }
+.prose > p, .prose > ul, .prose > ol { max-width: var(--read); }
 .prose h2 { margin-top: 0; scroll-margin-top: 88px; }
 .prose h2:not(:first-child) { margin-top: 56px; }
 .prose h3 { margin-top: 34px; }
@@ -587,7 +591,7 @@ pre {
 pre code { background: none; border: none; padding: 0; color: inherit; }
 pre .c { color: var(--faint); }
 
-table { border-collapse: collapse; width: 100%; max-width: var(--measure); margin: 22px 0; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; margin: 22px 0; font-size: 14px; }
 th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); }
 th { font-family: var(--display); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint); font-weight: 400; }
 td { color: var(--trace); }
