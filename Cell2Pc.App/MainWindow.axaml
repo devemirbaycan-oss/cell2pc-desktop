@@ -68,6 +68,38 @@
         </StackPanel>
       </Border>
 
+
+      <!-- Settings: collapsed, because both defaults are right for most people -->
+      <Expander x:Name="SettingsPanel" Classes="settings" Header="Settings">
+        <StackPanel Spacing="14" Margin="0,10,0,2">
+
+          <StackPanel Spacing="5">
+            <TextBlock Text="DNS server" Classes="label"/>
+            <TextBox x:Name="DnsBox" Watermark="1.1.1.1"/>
+            <TextBlock Classes="hint"
+                       Text="The phone's own resolver is not reachable from here. Change this if you use a filtering or private resolver."/>
+          </StackPanel>
+
+          <Border Height="1" Background="{StaticResource Divider}"/>
+
+          <!-- Split tunnelling: the rules themselves are edited from the
+               command line, where a list is easier to manage than in a dialog.
+               What belongs here is whether they apply at all, and what they
+               are currently doing - a rule silently not matching is the
+               failure this feature has. -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Split tunnelling" Classes="sectionLabel"/>
+            <CheckBox x:Name="SplitEnabled" Content="Keep excluded traffic off the phone"
+                      IsChecked="True"/>
+            <TextBlock x:Name="SplitSummary" Classes="hint"
+                       Text="No rules loaded."/>
+            <TextBlock Classes="hint" FontFamily="{StaticResource Mono}" FontSize="10"
+                       Text="cell2pc split bypass steamcontent.com"/>
+          </StackPanel>
+
+        </StackPanel>
+      </Expander>
+
       <!-- Live traffic -->
       <Border x:Name="TrafficPanel" Classes="panel" IsVisible="False">
         <StackPanel Spacing="12">
@@ -131,6 +163,15 @@
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Grid.Column="0" Text="Session" Classes="label"/>
             <TextBlock x:Name="Uptime" Grid.Column="1" Text="0s" Classes="value"/>
+          </Grid>
+
+          <!-- Only once a rule has actually matched. A permanent "0 excluded"
+               row would be noise for the majority who never set a rule, and
+               proves nothing to those who did. -->
+          <Grid x:Name="ExcludedRow" ColumnDefinitions="*,Auto" IsVisible="False">
+            <TextBlock Grid.Column="0" Text="Kept off the phone" Classes="label"/>
+            <TextBlock x:Name="ExcludedCount" Grid.Column="1" Text="0" Classes="value"
+                       Foreground="{StaticResource AccentBlue}"/>
           </Grid>
 
           <!-- Only appears once something has actually gone wrong. "Tunnel

@@ -25,9 +25,20 @@ internal sealed class CommandLine
     public bool ShowHelp { get; private init; }
     public bool ShowVersion { get; private init; }
     public int? DurationSeconds { get; private init; }
+    public string? Dns { get; private init; }
+
+    /// <summary>
+    /// Positional arguments after the verb, for subcommands like
+    /// `split bypass steamcontent.com`.
+    /// </summary>
+    public IReadOnlyList<string> Rest { get; private init; } = Array.Empty<string>();
+
+    /// <summary>Verbs whose remaining arguments are their own, not a host.</summary>
+    private static readonly string[] SubcommandVerbs = { "split" };
 
     private static readonly string[] Verbs =
-        { "connect", "status", "test", "recover", "doctor", "handover" };
+        { "connect", "status", "test", "recover", "doctor", "handover",
+          "split", "install-service", "uninstall-service", "run-service" };
 
     public static CommandLine Parse(string[] args)
     {
@@ -39,6 +50,7 @@ internal sealed class CommandLine
         bool noColour = Environment.GetEnvironmentVariable("NO_COLOR") is not null;
         bool help = false, version = false;
         int? duration = null;
+        string? dns = null;
 
         var positional = new List<string>();
 
@@ -67,12 +79,16 @@ internal sealed class CommandLine
                 case "--for":
                     duration = ParseDuration(Next(args, ref i, "--for"));
                     break;
+                case "--dns":
+                    dns = Next(args, ref i, "--dns");
+                    break;
 
                 default:
                     if (a.StartsWith("--token=")) token = a["--token=".Length..];
                     else if (a.StartsWith("--passphrase=")) passphrase = a["--passphrase=".Length..];
                     else if (a.StartsWith("--phone=")) phone = a["--phone=".Length..];
                     else if (a.StartsWith("--for=")) duration = ParseDuration(a["--for=".Length..]);
+                    else if (a.StartsWith("--dns=")) dns = a["--dns=".Length..];
                     else if (a.StartsWith('-')) throw new ArgumentException($"Unknown option '{a}'");
                     else positional.Add(a);
                     break;
@@ -86,6 +102,14 @@ internal sealed class CommandLine
             verbExplicit = true;
             positional.RemoveAt(0);
         }
+
+        // Some verbs take their own arguments - `split bypass steamcontent.com`
+        // - so their leftovers are handed through rather than being checked as
+        // a host address.
+        var rest = SubcommandVerbs.Contains(verb)
+            ? positional.ToList()
+            : new List<string>();
+        if (rest.Count > 0) positional.Clear();
 
         // A bare address is a convenience: `cell2pc 192.168.49.1`.
         // Anything else positional is a typo, and silently treating a mistyped
@@ -118,6 +142,8 @@ internal sealed class CommandLine
             ShowHelp = help,
             ShowVersion = version,
             DurationSeconds = duration,
+            Dns = dns,
+            Rest = rest,
         };
     }
 
@@ -162,6 +188,11 @@ internal sealed class CommandLine
           doctor      Diagnose why a connection is not working
           recover     Undo routes left behind by a crash
           handover    Take over a running tunnel without dropping it
+          split       Choose what goes through the phone and what does not
+
+        UNATTENDED
+          install-service    Connect at boot, before login, like a modem
+          uninstall-service  Remove it and restore normal routing
 
         COMMON OPTIONS
           -t, --token CODE        Pairing code shown on the phone
@@ -169,6 +200,7 @@ internal sealed class CommandLine
               --phone ADDRESS     Phone's address (default {PlatformFactory.PhoneAddress})
               --no-join           Do not join the phone's Wi-Fi automatically
               --for DURATION      Disconnect after 30s / 5m / 2h
+              --dns ADDRESS       Resolver to use (default 1.1.1.1)
               --json              Machine-readable output
           -q, --quiet             Only errors
           -v, --verbose           Extra detail, including stack traces

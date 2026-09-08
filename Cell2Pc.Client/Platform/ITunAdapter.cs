@@ -49,6 +49,16 @@ public interface IRouteManager : IDisposable
     bool RecoverOrAdopt(Func<bool> tunnelReachable);
 
     void RecoverIfNeeded();
+
+    /// <summary>
+    /// Keep these destinations off the tunnel by routing them via the machine's
+    /// normal gateway.
+    ///
+    /// Excluding traffic has to happen in the route table, not in the packet
+    /// pump: a packet that reaches the tunnel adapter has already left the
+    /// normal path, and there is no way to hand it back.
+    /// </summary>
+    void ExcludeRoutes(IEnumerable<string> destinations);
     void ConfigureInterface(string interfaceName, string address, string mask, string dns, int mtu);
     void ApplyTunnelRoutes(string interfaceName, string tunnelAddress, string peerAddress, string peerGateway);
     void Revert();

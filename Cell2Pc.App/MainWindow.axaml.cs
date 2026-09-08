@@ -9,6 +9,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Cell2Pc.Client;
+using Cell2Pc.Client.Net;
 using Cell2Pc.Client.Platform;
 
 namespace Cell2Pc.App;
@@ -34,6 +35,13 @@ public partial class MainWindow : Window
     private readonly object _historyLock = new();
     private DispatcherTimer? _autoConnectTimer;
 
+    /// <summary>
+    /// Loaded once at startup and reused, so the rules a session runs with are
+    /// the ones shown in the panel rather than whatever the file said at the
+    /// moment Connect was pressed.
+    /// </summary>
+    private SplitRules? _split;
+
     // Kept in step with Styles.axaml; Avalonia gives no typed access to those.
     private static readonly IBrush Green = new SolidColorBrush(Color.Parse("#3DDC91"));
     private static readonly IBrush Blue = new SolidColorBrush(Color.Parse("#4C9AFF"));
@@ -45,9 +53,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        var (token, passphrase) = Settings.Load();
+        var (token, passphrase, dns) = Settings.Load();
         TokenBox.Text = token;
         PassphraseBox.Text = passphrase;
+        DnsBox.Text = dns;
+
+        LoadSplitRules();
 
         // A tunnel left running by a previous instance is adopted rather than
         // rebuilt, so updating the app does not interrupt connectivity. The
@@ -163,12 +174,19 @@ public partial class MainWindow : Window
             }
 
             SetStatus("Connecting", "Setting up the tunnel...", Blue);
-            _session = new TunnelSession(PlatformFactory.PhoneAddress, token, passphrase);
+            _session = new TunnelSession(PlatformFactory.PhoneAddress, token, passphrase)
+            {
+                DnsServer = ResolveDns(),
+
+                // Null disables the check entirely rather than passing an empty
+                // rule set: an empty set still costs a lookup per packet.
+                Split = SplitEnabled.IsChecked == true ? _split : null,
+            };
             _session.Status += s => Dispatcher.UIThread.Post(() => DetailText.Text = s);
 
             if (await _session.StartAsync(_cts.Token))
             {
-                Settings.Save(token, passphrase);
+                Settings.Save(token, passphrase, ResolveDns());
                 _connectedAt = DateTime.UtcNow;
                 lock (_historyLock) _downHistory.Clear();
 
@@ -274,6 +292,13 @@ public partial class MainWindow : Window
             ReconnectCount.Text = s.Reconnects.ToString();
             Uptime.Text = FormatDuration(now - _connectedAt);
 
+            long excluded = s.PacketsExcluded;
+            if (excluded > 0)
+            {
+                ExcludedRow.IsVisible = true;
+                ExcludedCount.Text = $"{excluded:N0} packets";
+            }
+
             LinkCount.Foreground = s.Links < s.MaxLinks ? Amber : Brushes.White;
             UpdateLinkBars(s.Links);
 
@@ -335,6 +360,57 @@ public partial class MainWindow : Window
                 Opacity = 0.35 + 0.55 * fraction,
                 VerticalAlignment = VerticalAlignment.Bottom,
             });
+        }
+    }
+
+    /// <summary>
+    /// The DNS server to hand the adapter.
+    ///
+    /// Validated rather than trusted: a typo here does not fail loudly, it
+    /// produces an adapter whose resolver does not answer, which presents as
+    /// "the internet is broken" with a connection that is otherwise fine.
+    /// </summary>
+    private string ResolveDns()
+    {
+        string text = DnsBox.Text?.Trim() ?? "";
+        if (System.Net.IPAddress.TryParse(text, out _)) return text;
+
+        if (text.Length > 0)
+            DnsBox.Text = Settings.DefaultDns;
+
+        return Settings.DefaultDns;
+    }
+
+    /// <summary>
+    /// Read the split rules and say what they will do.
+    ///
+    /// The panel does not edit them - a list is easier to manage on the command
+    /// line than in a dialog - but it does report them, because a rule that
+    /// silently fails to match is this feature's characteristic failure and
+    /// nothing else would reveal it.
+    /// </summary>
+    private void LoadSplitRules()
+    {
+        try
+        {
+            _split = SplitRules.Load();
+            var rules = _split.All();
+
+            int excluded = rules.Count(r => !r.Tunnel);
+            int included = rules.Count - excluded;
+
+            SplitSummary.Text = rules.Count == 0
+                ? "No rules: everything goes through the phone."
+                : _split.DefaultMode == SplitRules.Mode.TunnelOnlyListed
+                    ? $"Only {included} listed destination{(included == 1 ? "" : "s")} go through the phone."
+                    : $"{excluded} destination{(excluded == 1 ? "" : "s")} kept off the phone.";
+        }
+        catch (Exception ex)
+        {
+            // A broken rules file must not stop the app connecting; the tunnel
+            // works without split rules, it just carries more.
+            _split = null;
+            SplitSummary.Text = $"Rules could not be read ({ex.Message}); everything will go through the phone.";
         }
     }
 

@@ -152,6 +152,46 @@ public sealed class LinuxRouteManager : IRouteManager
         _applied = true;
     }
 
+    /// <summary>
+    /// Route these destinations via the existing gateway so they bypass the
+    /// tunnel. Same reasoning as the Windows implementation: an exclusion has
+    /// to happen in the route table, not after the packet has already been
+    /// taken off the normal path.
+    /// </summary>
+    public void ExcludeRoutes(IEnumerable<string> destinations)
+    {
+        var (ok, route) = Run("ip route show default");
+        if (!ok || route.Length == 0)
+        {
+            Console.WriteLine("  no default route found; split rules will not take effect");
+            return;
+        }
+
+        // "default via 192.168.1.1 dev wlan0 ..."
+        var parts = route.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        int viaAt = Array.IndexOf(parts, "via");
+        if (viaAt < 0 || viaAt + 1 >= parts.Length)
+        {
+            Console.WriteLine("  could not read the default gateway; split rules will not take effect");
+            return;
+        }
+        string gateway = parts[viaAt + 1];
+
+        foreach (var destination in destinations)
+        {
+            if (destination.StartsWith("10.") || destination.StartsWith("192.168.") ||
+                destination.StartsWith("172.") || destination.StartsWith("169.254."))
+                continue;
+
+            string spec = destination.Contains('/') ? destination : destination + "/32";
+            var (added, output) = Run($"ip route add {spec} via {gateway}");
+            if (!added) Console.WriteLine($"  could not exclude {destination}: {output.Trim()}");
+            else _undoCommands.Add($"ip route del {spec}");
+        }
+
+        WriteJournal();
+    }
+
     public void Revert()
     {
         if (HandingOver)

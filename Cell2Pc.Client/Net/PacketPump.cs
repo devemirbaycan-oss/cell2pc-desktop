@@ -29,6 +29,19 @@ public sealed class PacketPump
     /// <summary>This PC's tunnel address in IPv6 form, for synthesised replies.</summary>
     private byte[]? _localAddress6;
 
+    /// <summary>
+    /// Which destinations belong in the tunnel.
+    ///
+    /// Excluded traffic is dropped here rather than forwarded, because the
+    /// route table is what actually keeps it off the tunnel - a host route via
+    /// the real gateway means those packets never reach this adapter at all.
+    /// Anything that does arrive despite a rule saying otherwise is a routing
+    /// mistake, and dropping it is safer than sending it somewhere unintended.
+    /// </summary>
+    public SplitRules? Split { get; set; }
+
+    public long PacketsExcluded;
+
     /// <summary>Adapter MTU. Keep in step with RouteManager.ConfigureInterface.</summary>
     public const int Mtu = 1400;
 
@@ -167,6 +180,15 @@ public sealed class PacketPump
     {
         var pkt = new IpPacket(raw);
         if (!pkt.IsValid) return;
+
+        if (Split is not null && !Split.ShouldTunnel(pkt.DestinationIp))
+        {
+            // The route table should have kept this off the adapter entirely.
+            // Counting it makes a misrouted exclusion visible rather than
+            // silently sending metered traffic through the phone.
+            Interlocked.Increment(ref PacketsExcluded);
+            return;
+        }
 
         switch (pkt.ProtocolNumber)
         {

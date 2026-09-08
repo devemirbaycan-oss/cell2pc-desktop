@@ -857,6 +857,51 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
     </section>
 
 
+
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>Things a modem cannot do</h2>
+          <p>
+            Replacing a mobile router is the low bar. These are the parts that
+            have no equivalent in a box with one pipe and no idea what is in it.
+          </p>
+        </div>
+        <div>
+          <div class="cases">
+
+            <article class="case">
+              <h3>Keep the expensive traffic off it</h3>
+              <p>
+                Windows Update and Steam are excluded out of the box, and you
+                can add any site or address range. Those keep using the network
+                they were already on, so nothing disconnects — a modem has one
+                pipe and everything takes it.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Be there before you are</h3>
+              <p>
+                Installed as a service, it connects at boot, before anyone logs
+                in, and keeps retrying while the phone is away. A machine that
+                reboots overnight is online again without being asked.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Answer to your own resolver</h3>
+              <p>
+                Point DNS at a Pi-hole, a company resolver, or anything else you
+                run. A modem hands you whatever the carrier gives it.
+              </p>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="lift">
       <div class="split">
         <div>
@@ -918,6 +963,21 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
               <td>Survives a dropped link</td>
               <td>Apps lose their connections</td>
               <td class="us">Adapter stays up, tunnel rebuilds</td>
+            </tr>
+            <tr>
+              <td>Choose what uses mobile data</td>
+              <td>All or nothing</td>
+              <td class="us">Per site or per address range</td>
+            </tr>
+            <tr>
+              <td>Starts without you</td>
+              <td>Toggled by hand each time</td>
+              <td class="us">A service, connected before you log in</td>
+            </tr>
+            <tr>
+              <td>DNS</td>
+              <td>Whatever the carrier hands out</td>
+              <td class="us">Yours, including a home resolver</td>
             </tr>
             <tr>
               <td>Battery</td>
@@ -1001,6 +1061,9 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           <p class="h">Contents</p>
           <a href="/docs#start">Getting started</a>
           <a href="/docs#cli">Command line</a>
+          <a href="/docs#split">Choosing what uses mobile data</a>
+          <a href="/docs#service">Running without logging in</a>
+          <a href="/docs#dns">DNS</a>
           <a href="/docs#fix">When it breaks</a>
           <a href="/docs#how">How it works</a>
           <a href="/docs#sec">Security</a>
@@ -1039,6 +1102,53 @@ cell2pc recover               <span class="c"># restore routing after a crash</s
 
           <h3>doctor</h3>
           <p>Works through platform, privileges, driver, Wi-Fi group, reachability and leftover routes in order, then says what to do about anything it finds — rather than reporting that the connection failed.</p>
+
+          <h2 id="split">Choosing what uses mobile data</h2>
+          <p>
+            Rules are matched on the destination, so they apply to every program
+            at once. Excluded traffic keeps using whatever network the PC was
+            already on — it is not blocked, it simply does not take the phone.
+          </p>
+<pre><code>cell2pc split                          <span class="c"># what the rules are now</span>
+cell2pc split bypass steamcontent.com  <span class="c"># keep it off the phone</span>
+cell2pc split bypass 203.0.113.0/24    <span class="c"># a range works too</span>
+cell2pc split via 198.51.100.5         <span class="c"># force one through</span>
+cell2pc split remove steamcontent.com  <span class="c"># drop a rule</span>
+cell2pc split only-listed              <span class="c"># invert: nothing unless listed</span></code></pre>
+          <p>
+            Windows Update, Steam and the private address ranges are excluded
+            from the start. The most specific rule wins, so a range can be
+            excluded with one address inside it kept. Changes apply on the next
+            connection.
+          </p>
+          <div class="note">
+            A hostname rule takes effect when the name is next looked up, since
+            a packet carries an address and not a name. Rules written as an
+            address or a range apply immediately.
+          </div>
+
+          <h2 id="service">Running without logging in</h2>
+          <p>
+            Installed as a service, the PC connects at boot and keeps retrying
+            while the phone is away — backing off as it goes, so a phone that is
+            simply switched off does not mean an attempt every second all night.
+          </p>
+<pre><code>cell2pc install-service --token=k7m2xq4p --passphrase=&lt;wifi&gt;
+cell2pc uninstall-service</code></pre>
+          <p>
+            Administrator or root is required, and the pairing code is stored in
+            the service definition rather than separately, so removing the
+            service removes the credential with it. Uninstalling also restores
+            normal routing.
+          </p>
+
+          <h2 id="dns">DNS</h2>
+          <p>
+            The default is <code>1.1.1.1</code>; the phone's own resolver is not
+            reachable from the PC. Change it in Settings in the app, or per
+            connection:
+          </p>
+<pre><code>cell2pc --dns 192.168.1.10     <span class="c"># a Pi-hole on the local network</span></code></pre>
 
           <h2 id="fix">When it breaks</h2>
 

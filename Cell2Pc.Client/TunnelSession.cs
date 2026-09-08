@@ -1,3 +1,4 @@
+using System.Linq;
 using Cell2Pc.Client.Net;
 using Cell2Pc.Client.Platform;
 using Cell2Pc.Client.Tunnel;
@@ -20,7 +21,15 @@ public sealed class TunnelSession : IDisposable
     private const string TunnelAddress = "10.87.0.2";
     private const string TunnelMask = "255.255.255.0";
     private const string TunnelGateway = "10.87.0.1";
-    private const string DnsServer = "1.1.1.1";
+    /// <summary>
+    /// Resolver handed to the adapter. A modem lets you choose this, so this
+    /// does too - the default is Cloudflare's, and a household resolver like a
+    /// Pi-hole is the usual reason to change it.
+    /// </summary>
+    public string DnsServer { get; set; } = "1.1.1.1";
+
+    /// <summary>Which destinations belong in the tunnel. Null tunnels everything.</summary>
+    public SplitRules? Split { get; set; }
     private const int DefaultPort = 47812;
 
     private readonly string _phone;
@@ -43,6 +52,15 @@ public sealed class TunnelSession : IDisposable
     public long PacketsUp => _pump?.PacketsOut ?? 0;
     public long PacketsDown => _pump?.PacketsIn ?? 0;
     public int ActiveStreams => _connection?.Current?.ActiveStreams ?? 0;
+
+    /// <summary>
+    /// Packets a split rule kept off the phone.
+    ///
+    /// Worth surfacing because the failure mode of split tunnelling is silence:
+    /// a rule that never matches looks exactly like a rule that is working, and
+    /// the difference only shows up on the bill.
+    /// </summary>
+    public long PacketsExcluded => _pump?.PacketsExcluded ?? 0;
     public int Reconnects => _connection?.ReconnectCount ?? 0;
 
     /// <summary>Why the links last closed, for the diagnostics panel.</summary>
@@ -134,6 +152,17 @@ public sealed class TunnelSession : IDisposable
             {
                 _routes.ConfigureInterface(AdapterName, TunnelAddress, TunnelMask, DnsServer, PacketPump.Mtu);
                 _routes.ApplyTunnelRoutes(AdapterName, TunnelGateway, _phone, _phone);
+
+                // Excluded destinations need a route via the real gateway
+                // BEFORE the default route moves, or their first packets are
+                // lost while the rule is still being installed.
+                if (Split is not null)
+                {
+                    var excluded = Split.All()
+                        .Where(r => !r.Tunnel && r.Match.Contains('.') && char.IsDigit(r.Match[0]))
+                        .Select(r => r.Match);
+                    _routes.ExcludeRoutes(excluded);
+                }
             }
 
             // The adapter did not exist when the first connection landed,

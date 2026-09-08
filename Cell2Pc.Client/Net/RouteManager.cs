@@ -205,6 +205,61 @@ public sealed class RouteManager : Platform.IRouteManager
         TryDelete(_journalPath);
     }
 
+    /// <summary>
+    /// Route these destinations via the machine's existing gateway, so they
+    /// bypass the tunnel entirely.
+    ///
+    /// This is where an exclusion actually takes effect. Filtering in the
+    /// packet pump would be too late - the packet has already been taken off
+    /// the normal path by the time it arrives there.
+    /// </summary>
+    public void ExcludeRoutes(IEnumerable<string> destinations)
+    {
+        string? gateway = DefaultGateway();
+        if (gateway is null)
+        {
+            Console.WriteLine("  no default gateway found; split rules will not take effect");
+            return;
+        }
+
+        foreach (var destination in destinations)
+        {
+            // Skip private ranges: they already route locally, and adding a
+            // host route for them would fight the interface's own subnet route.
+            if (destination.StartsWith("10.") || destination.StartsWith("192.168.") ||
+                destination.StartsWith("172.") || destination.StartsWith("169.254."))
+                continue;
+
+            string spec = destination.Contains('/')
+                ? destination.Replace("/", " mask ")
+                : destination + " mask 255.255.255.255";
+
+            var (ok, output) = Run($"route add {spec} {gateway} metric 1");
+            if (!ok) Console.WriteLine($"  could not exclude {destination}: {output.Trim()}");
+            else _undoCommands.Add($"route delete {destination.Split('/')[0]}");
+        }
+
+        WriteJournal();
+    }
+
+    /// <summary>The gateway the machine used before the tunnel took over.</summary>
+    private static string? DefaultGateway()
+    {
+        foreach (var nic in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (nic.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up) continue;
+            if (nic.Name.Contains("Cell2Pc", StringComparison.OrdinalIgnoreCase)) continue;
+
+            foreach (var gw in nic.GetIPProperties().GatewayAddresses)
+            {
+                if (gw.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
+                var text = gw.Address.ToString();
+                if (text != "0.0.0.0") return text;
+            }
+        }
+        return null;
+    }
+
     private static int IndexOf(string name)
     {
         foreach (var nic in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())

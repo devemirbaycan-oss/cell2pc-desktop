@@ -3,6 +3,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using Cell2Pc.Client;
+using Cell2Pc.Client.Net;
 using Cell2Pc.Client.Platform;
 using Cell2Pc.Client.Tunnel;
 
@@ -80,7 +81,11 @@ internal static class Commands
             Output.Ok("joined");
         }
 
-        using var session = new TunnelSession(cmd.Phone, token, cmd.Passphrase);
+        using var session = new TunnelSession(cmd.Phone, token, cmd.Passphrase)
+        {
+            Split = SplitRules.Load(),
+        };
+        if (!string.IsNullOrWhiteSpace(cmd.Dns)) session.DnsServer = cmd.Dns!;
         var stopped = new CancellationTokenSource();
 
         session.Status += s =>
@@ -362,7 +367,11 @@ internal static class Commands
         string? token = ResolveToken(cmd);
         if (token is null) return 1;
 
-        using var session = new TunnelSession(cmd.Phone, token, cmd.Passphrase);
+        using var session = new TunnelSession(cmd.Phone, token, cmd.Passphrase)
+        {
+            Split = SplitRules.Load(),
+        };
+        if (!string.IsNullOrWhiteSpace(cmd.Dns)) session.DnsServer = cmd.Dns!;
         var stopped = new CancellationTokenSource();
         session.Status += s => Output.Step(s);
 
@@ -387,6 +396,106 @@ internal static class Commands
 
         Output.EndStatusLine();
         session.Stop();
+        return 0;
+    }
+
+    // --------------------------------------------------------------- split --
+
+    /// <summary>
+    /// Show or change which traffic goes through the phone.
+    ///
+    /// The connection is metered, so excluding a game update or a backup is
+    /// often more useful than any amount of extra throughput. No modem can do
+    /// this - it has one pipe and everything takes it.
+    /// </summary>
+    public static int Split(CommandLine cmd)
+    {
+        Output.Configure(!cmd.NoColour, cmd.Quiet, cmd.Json);
+
+        var rules = SplitRules.Load();
+        var rest = cmd.Rest;
+
+        // Bare "split" lists, and so does "split list": the second is what
+        // people type first, and refusing it teaches nothing.
+        if (rest.Count == 0 || rest[0].Equals("list", StringComparison.OrdinalIgnoreCase))
+        {
+            var all = rules.All();
+            if (cmd.Json)
+            {
+                Output.Json(new
+                {
+                    mode = rules.DefaultMode.ToString(),
+                    rules = all.Select(r => new { match = r.Match, tunnel = r.Tunnel }),
+                });
+                return 0;
+            }
+
+            Output.Title("Split rules");
+            Output.Field("Default", rules.DefaultMode == SplitRules.Mode.TunnelEverything
+                ? "everything through the phone"
+                : "only what is listed");
+            Output.Info("");
+
+            if (all.Count == 0) { Output.Info("  No rules."); return 0; }
+
+            foreach (var (match, tunnel) in all)
+                Output.Field(tunnel ? "via phone" : "bypass", match);
+
+            Output.Info("");
+            Output.Hint("cell2pc split bypass <host or range>   keep it off the phone");
+            Output.Hint("cell2pc split via <host or range>      send it through the phone");
+            Output.Hint("cell2pc split remove <match>           drop a rule");
+            return 0;
+        }
+
+        string verb = rest[0].ToLowerInvariant();
+        string? target = rest.Count > 1 ? rest[1] : null;
+
+        switch (verb)
+        {
+            case "bypass" when target is not null:
+                rules.Add(target, tunnel: false);
+                rules.Save();
+                Output.Ok($"{target} will bypass the phone");
+                break;
+
+            case "via" when target is not null:
+                rules.Add(target, tunnel: true);
+                rules.Save();
+                Output.Ok($"{target} will go through the phone");
+                break;
+
+            case "remove" when target is not null:
+                rules.Remove(target);
+                rules.Save();
+                Output.Ok($"removed {target}");
+                break;
+
+            case "only-listed":
+                rules.SetMode(SplitRules.Mode.TunnelOnlyListed);
+                rules.Save();
+                Output.Ok("only listed traffic will use the phone");
+                break;
+
+            case "everything":
+                rules.SetMode(SplitRules.Mode.TunnelEverything);
+                rules.Save();
+                Output.Ok("everything will use the phone unless excluded");
+                break;
+
+            case "bypass" or "via" or "remove":
+                Output.Error($"'{verb}' needs something to act on.");
+                Output.Hint($"cell2pc split {verb} steamcontent.com");
+                Output.Hint($"cell2pc split {verb} 203.0.113.0/24");
+                return 2;
+
+            default:
+                Output.Error($"Don't know how to '{verb}'.");
+                Output.Hint("Try: list, bypass, via, remove, only-listed, everything");
+                return 2;
+        }
+
+        Output.Hint("Reconnect for this to take effect.");
         return 0;
     }
 

@@ -47,6 +47,10 @@ internal static class Program
                 "recover" => Commands.Recover(cmd),
                 "doctor" => await Commands.DoctorAsync(cmd),
                 "handover" => await Commands.HandoverAsync(cmd),
+                "split" => Commands.Split(cmd),
+                "install-service" => ServiceMode.Install(cmd),
+                "uninstall-service" => ServiceMode.Uninstall(cmd),
+                "run-service" => await ServiceMode.Run(cmd),
                 _ => Unknown(cmd.Verb),
             };
         }
