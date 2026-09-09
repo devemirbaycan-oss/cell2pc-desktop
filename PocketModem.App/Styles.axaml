@@ -1,0 +1,168 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    PocketModem's desktop visual language, deliberately the same as the phone's:
+    dark surfaces, one accent for connection state, monospace for anything
+    numeric that changes.
+  -->
+
+  <Styles.Resources>
+    <!-- Surfaces, darkest to lightest. Not pure black - a slight blue cast
+         reads as designed rather than as an unstyled void. -->
+    <Color x:Key="InkColor">#0A0C10</Color>
+    <Color x:Key="Surface1Color">#12151C</Color>
+    <Color x:Key="Surface2Color">#1A1F28</Color>
+    <Color x:Key="Surface3Color">#232935</Color>
+    <Color x:Key="DividerColor">#2A3140</Color>
+
+    <SolidColorBrush x:Key="Ink" Color="{StaticResource InkColor}"/>
+    <SolidColorBrush x:Key="Surface1" Color="{StaticResource Surface1Color}"/>
+    <SolidColorBrush x:Key="Surface2" Color="{StaticResource Surface2Color}"/>
+    <SolidColorBrush x:Key="Surface3" Color="{StaticResource Surface3Color}"/>
+    <SolidColorBrush x:Key="Divider" Color="{StaticResource DividerColor}"/>
+
+    <SolidColorBrush x:Key="TextPrimary" Color="#F2F5FA"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#9AA5B8"/>
+    <SolidColorBrush x:Key="TextTertiary" Color="#5F6B7F"/>
+
+    <SolidColorBrush x:Key="AccentGreen" Color="#3DDC91"/>
+    <SolidColorBrush x:Key="AccentBlue" Color="#4C9AFF"/>
+    <SolidColorBrush x:Key="AccentAmber" Color="#FFB020"/>
+    <SolidColorBrush x:Key="AccentRed" Color="#FF5C5C"/>
+
+    <FontFamily x:Key="Mono">Consolas,Menlo,DejaVu Sans Mono,monospace</FontFamily>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{StaticResource Ink}"/>
+    <Setter Property="FontFamily" Value="Segoe UI,Inter,system-ui,sans-serif"/>
+  </Style>
+
+  <!-- Panel: one radius and one border, used for every card. -->
+  <Style Selector="Border.panel">
+    <Setter Property="Background" Value="{StaticResource Surface1}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource Divider}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="14"/>
+    <Setter Property="Padding" Value="18"/>
+  </Style>
+
+  <Style Selector="TextBlock.sectionLabel">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{StaticResource TextTertiary}"/>
+    <Setter Property="LetterSpacing" Value="0.8"/>
+  </Style>
+
+  <Style Selector="TextBlock.label">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+  </Style>
+
+  <!-- Monospace for live numbers: proportional digits change width as they
+       update, so a speed readout jitters horizontally and is harder to read. -->
+  <Style Selector="TextBlock.value">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontFamily" Value="{StaticResource Mono}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+  </Style>
+
+  <Style Selector="TextBlock.bigStat">
+    <Setter Property="FontSize" Value="32"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontFamily" Value="{StaticResource Mono}"/>
+  </Style>
+
+  <Style Selector="TextBlock.hint">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Foreground" Value="{StaticResource TextTertiary}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{StaticResource AccentGreen}"/>
+    <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="Padding" Value="0,13"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#35C482"/>
+  </Style>
+  <Style Selector="Button.primary:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource Surface3}"/>
+    <Setter Property="Foreground" Value="{StaticResource TextTertiary}"/>
+  </Style>
+
+  <Style Selector="Button.secondary">
+    <Setter Property="Background" Value="{StaticResource Surface3}"/>
+    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="Padding" Value="0,13"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#2C3442"/>
+  </Style>
+
+  <Style Selector="TextBox">
+    <Setter Property="Background" Value="{StaticResource Surface2}"/>
+    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource Divider}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="12,10"/>
+    <Setter Property="FontFamily" Value="{StaticResource Mono}"/>
+    <Setter Property="FontSize" Value="14"/>
+  </Style>
+  <Style Selector="TextBox:focus">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentGreen}"/>
+  </Style>
+
+  <!-- Settings expander: shaped like a panel so it sits in the same family as
+       the cards above it, but quieter - it is a thing you open occasionally,
+       not part of the reading order. -->
+  <Style Selector="Expander.settings">
+    <Setter Property="Background" Value="{StaticResource Surface1}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource Divider}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="14"/>
+    <Setter Property="Padding" Value="18,0,18,14"/>
+  </Style>
+  <Style Selector="Expander.settings /template/ ToggleButton">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="18,14"/>
+    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Expander.settings /template/ ToggleButton:pointerover">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+  </Style>
+
+  <Style Selector="CheckBox">
+    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
+    <Setter Property="Background" Value="{StaticResource AccentGreen}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource AccentGreen}"/>
+  </Style>
+  <Style Selector="CheckBox /template/ Border#NormalRectangle">
+    <Setter Property="BorderBrush" Value="{StaticResource Divider}"/>
+    <Setter Property="CornerRadius" Value="4"/>
+  </Style>
+  <Style Selector="CheckBox:checked /template/ Path">
+    <Setter Property="Fill" Value="{StaticResource Ink}"/>
+  </Style>
+
+</Styles>

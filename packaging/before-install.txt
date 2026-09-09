@@ -1,16 +1,14 @@
-Cell2Pc shares your phone's mobile data with this PC over Wi-Fi Direct.
-
-This desktop client is open source (MIT). The phone app is separate.
+PocketModem shares your phone's mobile data with this PC over Wi-Fi Direct.
 
 WHAT IT INSTALLS
 
-  Cell2Pc          the app
-  cell2pc          the same thing from a terminal
+  PocketModem          the app
+  pocketmodem          the same thing from a terminal
   wintun.dll       the virtual network driver the tunnel needs
 
 WHY IT ASKS FOR ADMINISTRATOR
 
-Cell2Pc creates a network adapter and changes this PC's routing so that all
+PocketModem creates a network adapter and changes this PC's routing so that all
 traffic goes through your phone. Windows treats both as privileged, so the app
 asks for elevation when you press Connect. It restores your normal routing when
 you disconnect, and again on next start if it is ever interrupted.

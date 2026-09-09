@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cell2Pc</title>
+<title>PocketModem</title>
 <meta name="description" content="Share an Android phone's cellular data with a Windows or Linux PC over Wi-Fi Direct. No root, no hotspot, no tethering stack.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
 
 <style>
 /* ---------------------------------------------------------------------------
-   Cell2Pc
+   PocketModem
 
    Visual language borrowed from the instruments this belongs beside: spectrum
    analysers, packet captures, throughput traces. Cold ground, one warm
@@ -662,13 +662,13 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
 
 <header>
   <nav>
-    <a href="/" class="mark"><span class="pulse"></span>CELL2PC</a>
+    <a href="/" class="mark"><span class="pulse"></span>POCKETMODEM</a>
     <div class="links">
       <a href="/" data-v="home">Overview</a>
       <a href="/docs" data-v="docs">Docs</a>
       <a href="/download" data-v="get">Download</a>
       <a href="/privacy" data-v="privacy">Privacy</a>
-      <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">Source</a>
+      <a href="https://github.com/devemirbaycan-oss/pocketmodem-desktop">Source</a>
     </div>
   </nav>
 </header>
@@ -683,7 +683,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
         <h1 id="headline">Your PC on the phone's <em>mobile data</em></h1>
         <p class="lede">
           No mobile router, no second SIM, no hotel Wi-Fi. Your phone is
-          already a modem — Cell2Pc gives your laptop
+          already a modem — PocketModem gives your laptop
           <strong>the connection it is already paying for</strong>, anywhere
           the phone has signal.
         </p>
@@ -712,7 +712,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
         <div>
           <h2>The modem you already own</h2>
           <div class="claim">
-            <p>A phone is a modem with a screen. Cell2Pc stops treating those as two purchases.</p>
+            <p>A phone is a modem with a screen. PocketModem stops treating those as two purchases.</p>
           </div>
         </div>
         <div>
@@ -724,7 +724,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           </p>
           <p>
             Your phone is charged, in your pocket, and on the best network you
-            could get. Cell2Pc turns that into a connection your laptop can use,
+            could get. PocketModem turns that into a connection your laptop can use,
             anywhere the phone has signal.
           </p>
         </div>
@@ -841,7 +841,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
             outright.
           </p>
           <p>
-            Cell2Pc never touches it. The phone reads your PC's TCP and UDP
+            PocketModem never touches it. The phone reads your PC's TCP and UDP
             streams and opens ordinary Android sockets to the same destinations,
             bound to the cellular interface, then copies bytes between the two.
           </p>
@@ -856,6 +856,71 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
       </div>
     </section>
 
+
+
+    <section class="lift">
+      <div class="split">
+        <div>
+          <h2>Things a modem cannot do</h2>
+          <p>
+            Replacing a mobile router is the low bar. These are the parts that
+            have no equivalent in a box with one pipe and no idea what is in it.
+          </p>
+        </div>
+        <div>
+          <div class="cases">
+
+            <article class="case">
+              <h3>Keep the expensive traffic off it</h3>
+              <p>
+                Windows Update and Steam are excluded out of the box, and you
+                can add any site or address range. Those keep using the network
+                they were already on, so nothing disconnects — a modem has one
+                pipe and everything takes it.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Be there before you are</h3>
+              <p>
+                Installed as a service, it connects at boot, before anyone logs
+                in, and keeps retrying while the phone is away. A machine that
+                reboots overnight is online again without being asked.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Stop one machine taking it all</h3>
+              <p>
+                Cap the whole connection, or any single computer. The limit
+                lets bursts through at full speed and only holds back sustained
+                transfers, so browsing stays quick while a download is kept to
+                its share — and the phone stays usable.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Decide what may connect at all</h3>
+              <p>
+                Every computer is named and listed, and any of them can be
+                blocked on the spot — it drops immediately rather than at its
+                next reconnect. Turn on approval and a new machine waits until
+                you say yes, so the pairing code alone is no longer enough.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Answer to your own resolver</h3>
+              <p>
+                Point DNS at a Pi-hole, a company resolver, or anything else you
+                run. A modem hands you whatever the carrier gives it.
+              </p>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="lift">
       <div class="split">
@@ -872,7 +937,7 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
             <tr>
               <th></th>
               <th>Phone hotspot</th>
-              <th class="us">Cell2Pc</th>
+              <th class="us">PocketModem</th>
             </tr>
             <tr>
               <td>Carrier sees</td>
@@ -918,6 +983,31 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
               <td>Survives a dropped link</td>
               <td>Apps lose their connections</td>
               <td class="us">Adapter stays up, tunnel rebuilds</td>
+            </tr>
+            <tr>
+              <td>Choose what uses mobile data</td>
+              <td>All or nothing</td>
+              <td class="us">Per site or per address range</td>
+            </tr>
+            <tr>
+              <td>Starts without you</td>
+              <td>Toggled by hand each time</td>
+              <td class="us">A service, connected before you log in</td>
+            </tr>
+            <tr>
+              <td>DNS</td>
+              <td>Whatever the carrier hands out</td>
+              <td class="us">Yours, including a home resolver</td>
+            </tr>
+            <tr>
+              <td>Which computers may connect</td>
+              <td>Anyone with the passphrase</td>
+              <td class="us">Approved list, blockable per machine</td>
+            </tr>
+            <tr>
+              <td>Speed limits</td>
+              <td>None</td>
+              <td class="us">Overall, and per computer</td>
             </tr>
             <tr>
               <td>Battery</td>
@@ -1001,6 +1091,11 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           <p class="h">Contents</p>
           <a href="/docs#start">Getting started</a>
           <a href="/docs#cli">Command line</a>
+          <a href="/docs#split">Choosing what uses mobile data</a>
+          <a href="/docs#service">Running without logging in</a>
+          <a href="/docs#devices">Which computers may connect</a>
+          <a href="/docs#limits">Speed limits</a>
+          <a href="/docs#dns">DNS</a>
           <a href="/docs#fix">When it breaks</a>
           <a href="/docs#how">How it works</a>
           <a href="/docs#sec">Security</a>
@@ -1012,10 +1107,10 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           <p>You need both halves — the phone app and one desktop app. They work as a pair.</p>
 
           <h3>On the phone</h3>
-          <p>Open Cell2Pc and tap <strong>Wi-Fi Direct</strong>. It shows a pairing code and a Wi-Fi passphrase.</p>
+          <p>Open PocketModem and tap <strong>Wi-Fi Direct</strong>. It shows a pairing code and a Wi-Fi passphrase.</p>
 
           <h3>On the PC</h3>
-          <p>Run Cell2Pc, enter the pairing code, press Connect. It joins the phone's network itself, and asks for elevation only at that point — creating a network adapter is privileged.</p>
+          <p>Run PocketModem, enter the pairing code, press Connect. It joins the phone's network itself, and asks for elevation only at that point — creating a network adapter is privileged.</p>
 
           <div class="note">
             The passphrase is only needed once. After that the PC remembers both
@@ -1030,25 +1125,104 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
 
           <h2 id="cli">Command line</h2>
           <p>Everything the app does is available from a terminal, and <code>--json</code> makes any command scriptable.</p>
-<pre><code>cell2pc                       <span class="c"># prompts for the pairing code</span>
-cell2pc -t k7m2xq4p           <span class="c"># with a known code</span>
-cell2pc connect --for 2h      <span class="c"># disconnect after two hours</span>
-cell2pc status                <span class="c"># is a tunnel running?</span>
-cell2pc doctor                <span class="c"># why it will not connect</span>
-cell2pc recover               <span class="c"># restore routing after a crash</span></code></pre>
+<pre><code>pocketmodem                       <span class="c"># prompts for the pairing code</span>
+pocketmodem -t k7m2xq4p           <span class="c"># with a known code</span>
+pocketmodem connect --for 2h      <span class="c"># disconnect after two hours</span>
+pocketmodem status                <span class="c"># is a tunnel running?</span>
+pocketmodem doctor                <span class="c"># why it will not connect</span>
+pocketmodem recover               <span class="c"># restore routing after a crash</span></code></pre>
 
           <h3>doctor</h3>
           <p>Works through platform, privileges, driver, Wi-Fi group, reachability and leftover routes in order, then says what to do about anything it finds — rather than reporting that the connection failed.</p>
+
+          <h2 id="split">Choosing what uses mobile data</h2>
+          <p>
+            Rules are matched on the destination, so they apply to every program
+            at once. Excluded traffic keeps using whatever network the PC was
+            already on — it is not blocked, it simply does not take the phone.
+          </p>
+<pre><code>pocketmodem split                          <span class="c"># what the rules are now</span>
+pocketmodem split bypass steamcontent.com  <span class="c"># keep it off the phone</span>
+pocketmodem split bypass 203.0.113.0/24    <span class="c"># a range works too</span>
+pocketmodem split via 198.51.100.5         <span class="c"># force one through</span>
+pocketmodem split remove steamcontent.com  <span class="c"># drop a rule</span>
+pocketmodem split only-listed              <span class="c"># invert: nothing unless listed</span></code></pre>
+          <p>
+            Windows Update, Steam and the private address ranges are excluded
+            from the start. The most specific rule wins, so a range can be
+            excluded with one address inside it kept. Changes apply on the next
+            connection.
+          </p>
+          <div class="note">
+            A hostname rule takes effect when the name is next looked up, since
+            a packet carries an address and not a name. Rules written as an
+            address or a range apply immediately.
+          </div>
+
+          <h2 id="service">Running without logging in</h2>
+          <p>
+            Installed as a service, the PC connects at boot and keeps retrying
+            while the phone is away — backing off as it goes, so a phone that is
+            simply switched off does not mean an attempt every second all night.
+          </p>
+<pre><code>pocketmodem install-service --token=k7m2xq4p --passphrase=&lt;wifi&gt;
+pocketmodem uninstall-service</code></pre>
+          <p>
+            Administrator or root is required, and the pairing code is stored in
+            the service definition rather than separately, so removing the
+            service removes the credential with it. Uninstalling also restores
+            normal routing.
+          </p>
+
+          <h2 id="devices">Which computers may connect</h2>
+          <p>
+            Every PC that connects is listed on the phone, with a name you can
+            change. Block one and it drops immediately rather than at its next
+            reconnect. Turn on <b>Approval required</b> and a machine that has
+            never connected waits until you allow it, so someone who reads the
+            pairing code off your screen still cannot get in.
+          </p>
+          <div class="note">
+            A router calls this MAC filtering, and it is worth being exact.
+            Android offers no way to refuse a device at the Wi-Fi Direct radio,
+            so a blocked machine can still join the group — it just cannot use
+            the connection, because every PC identifies itself before anything
+            is relayed. The identity used is the pairing, not the MAC, since
+            Android randomises the device address between sessions and a filter
+            keyed on it would forget your laptop every time it reconnected.
+          </div>
+
+          <h2 id="limits">Speed limits</h2>
+          <p>
+            Cap the connection as a whole, or any single computer, in Mbps. The
+            limit holds one second of capacity, so a page load bursts through at
+            full speed and only sustained transfers are slowed — a limited link
+            feels slow rather than broken.
+          </p>
+          <p>
+            Traffic over the limit is delayed rather than dropped, which lets
+            the sender upstream slow down on its own instead of retransmitting.
+            Limits apply to new data at once; a transfer already running slows
+            rather than failing.
+          </p>
+
+          <h2 id="dns">DNS</h2>
+          <p>
+            The default is <code>1.1.1.1</code>; the phone's own resolver is not
+            reachable from the PC. Change it in Settings in the app, or per
+            connection:
+          </p>
+<pre><code>pocketmodem --dns 192.168.1.10     <span class="c"># a Pi-hole on the local network</span></code></pre>
 
           <h2 id="fix">When it breaks</h2>
 
           <h3>The PC has no internet after a crash</h3>
           <p>Routing changes are journalled to disk before they are applied and replayed on next start, so this should recover on its own. If it does not:</p>
-<pre><code>cell2pc recover</code></pre>
+<pre><code>pocketmodem recover</code></pre>
           <p>Or run <strong>Fix my internet</strong> from the Start menu. Disabling and re-enabling the Wi-Fi adapter also clears everything.</p>
 
           <h3>Some sites load, others do not</h3>
-          <p>Usually MTU. The tunnel probes for it, but a network in the middle can still black-hole large packets. <code>cell2pc doctor</code> will say more.</p>
+          <p>Usually MTU. The tunnel probes for it, but a network in the middle can still black-hole large packets. <code>pocketmodem doctor</code> will say more.</p>
 
           <h3>It says degraded</h3>
           <p>Fewer than four links are up. The tunnel works with one; throughput and stall resistance drop. Usually a weak radio link.</p>
@@ -1066,7 +1240,7 @@ cell2pc recover               <span class="c"># restore routing after a crash</s
           </p>
           <div class="note">
             This is <strong>not</strong> USB tethering. Android's tethering
-            stack is exactly what Cell2Pc avoids; the cable only carries the
+            stack is exactly what PocketModem avoids; the cable only carries the
             tunnel, and the phone still opens its own cellular sockets the same
             way it does over Wi-Fi Direct.
           </div>
@@ -1108,14 +1282,14 @@ cell2pc recover               <span class="c"># restore routing after a crash</s
           <h2 id="build">Building</h2>
           <p>Requires the .NET 9 SDK; the phone app additionally needs JDK 17 and the Android SDK.</p>
 <pre><code>dotnet build
-dotnet test Cell2Pc.Tests
+dotnet test PocketModem.Tests
 
 <span class="c"># Windows — Wintun (amd64) must sit beside the exe</span>
-dotnet publish Cell2Pc.App -c Release -r win-x64 -o dist
+dotnet publish PocketModem.App -c Release -r win-x64 -o dist
 
 <span class="c"># Linux</span>
-dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
-          <p>The desktop client is <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">open source under MIT</a>. The Android app is proprietary.</p>
+dotnet publish PocketModem.App -c Release -r linux-x64 -o dist-linux</code></pre>
+          <p>The desktop client is <a href="https://github.com/devemirbaycan-oss/pocketmodem-desktop">open source under MIT</a>. The Android app is proprietary.</p>
         </div>
 
       </div>
@@ -1135,17 +1309,17 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
         <div class="plat">
           <span class="os">Android</span>
           <span class="req">Android 12 or newer, with Wi-Fi Direct. Signed, but not from the Play Store — allow installation when prompted.</span>
-          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/Cell2Pc-1.0.0.apk">APK · 18 MB</a>
+          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/pocketmodem-desktop/releases/latest/download/PocketModem-1.0.0.apk">APK · 18 MB</a>
         </div>
         <div class="plat">
           <span class="os">Windows</span>
           <span class="req">Windows 10 or 11, 64-bit. Bundles the Wintun driver. Needs Administrator to connect.</span>
-          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/Cell2Pc-Setup-1.0.0.exe">Installer · 9 MB</a>
+          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/pocketmodem-desktop/releases/latest/download/PocketModem-Setup-1.0.0.exe">Installer · 9 MB</a>
         </div>
         <div class="plat">
           <span class="os">Linux</span>
           <span class="req">x64, tun-capable kernel, NetworkManager. Needs root or CAP_NET_ADMIN.</span>
-          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/cell2pc-desktop/releases/latest/download/cell2pc-1.0.0-linux-x64.tar.gz">Archive · 9 MB</a>
+          <a class="btn btn-solid" href="https://github.com/devemirbaycan-oss/pocketmodem-desktop/releases/latest/download/pocketmodem-1.0.0-linux-x64.tar.gz">Archive · 9 MB</a>
         </div>
       </div>
 
@@ -1158,9 +1332,9 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
       <h3 style="margin-top:44px">Then</h3>
       <ol style="color:var(--trace);max-width:var(--measure);padding-left:20px">
-        <li>Open Cell2Pc on the phone and tap <strong>Wi-Fi Direct</strong></li>
+        <li>Open PocketModem on the phone and tap <strong>Wi-Fi Direct</strong></li>
         <li>Note the pairing code and passphrase</li>
-        <li>Run Cell2Pc on the PC, enter the code, press Connect</li>
+        <li>Run PocketModem on the PC, enter the code, press Connect</li>
       </ol>
       <p>The <a href="/docs">documentation</a> covers the rest, including what to do when something goes wrong.</p>
     </section>
@@ -1197,15 +1371,15 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
           </div>
 
           <p>
-            Cell2Pc moves your PC's traffic through your phone. Everything about
+            PocketModem moves your PC's traffic through your phone. Everything about
             that — which sites you visit, what you send, who you connect to —
             stays between your devices and is never sent to us, stored by us, or
             inspected. The desktop client is
-            <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop">open source</a>,
+            <a href="https://github.com/devemirbaycan-oss/pocketmodem-desktop">open source</a>,
             so that part is checkable rather than something you take on faith.
           </p>
           <p>
-            Cell2Pc is paid software, and validating a subscription does require
+            PocketModem is paid software, and validating a subscription does require
             a small amount of data. That is set out in full below rather than
             buried.
           </p>
@@ -1365,14 +1539,14 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
           <h4>Children</h4>
           <p>
-            Cell2Pc is not directed at children and we do not knowingly collect
+            PocketModem is not directed at children and we do not knowingly collect
             data from anyone under 16. If you believe a child has provided data
             through a subscription, write to us and it will be deleted.
           </p>
 
           <h2 id="carrier">Your carrier, and what this software does not decide</h2>
           <p>
-            Cell2Pc routes your PC's traffic through your mobile connection.
+            PocketModem routes your PC's traffic through your mobile connection.
             Whether that use is permitted is governed by your agreement with
             your mobile operator and by the law where you are. That is yours to
             check, not something this software can decide for you.
@@ -1423,7 +1597,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
             Questions go to
             <a href="mailto:dev.emirbaycan@gmail.com">dev.emirbaycan@gmail.com</a>,
             or the
-            <a href="https://github.com/devemirbaycan-oss/cell2pc-desktop/issues">issue tracker</a>.
+            <a href="https://github.com/devemirbaycan-oss/pocketmodem-desktop/issues">issue tracker</a>.
           </p>
         </div>
 
@@ -1434,7 +1608,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
 <footer>
   <div class="shell">
-    <span class="mono">CELL2PC · 1.0.0</span>
+    <span class="mono">POCKETMODEM · 1.0.0</span>
     <span><a href="/privacy">Privacy &amp; terms</a> · Check your carrier's terms before use.</span>
   </div>
 </footer>
@@ -1572,7 +1746,7 @@ dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux</code></pre>
 
   var nodes = [
     { x: 0.09, label: 'YOUR PC',  sub: 'any app' },
-    { x: 0.38, label: 'PHONE',    sub: 'Cell2Pc' },
+    { x: 0.38, label: 'PHONE',    sub: 'PocketModem' },
     { x: 0.68, label: 'CARRIER',  sub: 'LTE / 5G' },
     { x: 0.93, label: 'INTERNET', sub: '' }
   ];

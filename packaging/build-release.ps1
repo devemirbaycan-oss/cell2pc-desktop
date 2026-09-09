@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    Builds every desktop artifact: Windows app, CLI, installer and Linux
-    binaries. The phone app is built from its own repository.
+    Builds every PocketModem artifact: Windows app, CLI, installer, Linux binaries
+    and the Android APK.
 
 .DESCRIPTION
     One script so a release is reproducible rather than a sequence of commands
@@ -11,6 +11,10 @@
     binary earns reputation or a certificate is bought; -CertificatePath and
     -CertificatePassword are here so that signing becomes one step whenever
     that changes, rather than a rebuild of the packaging.
+
+.PARAMETER SkipAndroid
+    Skip the APK. Useful when only the desktop side changed, since the Gradle
+    build is by far the slowest part.
 
 .PARAMETER CertificatePath
     A .pfx to sign the binaries and installer with. Unsigned when omitted.
@@ -23,6 +27,7 @@
 
 [CmdletBinding()]
 param(
+    [switch]$SkipAndroid,
     [string]$CertificatePath,
     [System.Security.SecureString]$CertificatePassword,
     [string]$Version = "1.0.0"
@@ -42,25 +47,25 @@ function Assert-LastExitCode($what) {
     if ($LASTEXITCODE -ne 0) { throw "$what failed with exit code $LASTEXITCODE" }
 }
 
-Write-Host "Cell2Pc release build $Version" -ForegroundColor White
+Write-Host "PocketModem release build $Version" -ForegroundColor White
 
 # The app cannot be replaced while it is running, and a half-written exe is a
 # worse outcome than a clear failure here.
-$running = Get-Process -Name "Cell2Pc-Desktop", "cell2pc" -ErrorAction SilentlyContinue
+$running = Get-Process -Name "PocketModem-Desktop", "pocketmodem" -ErrorAction SilentlyContinue
 if ($running) {
-    throw "Cell2Pc is running (pid $($running.Id -join ', ')). Close it and run this again."
+    throw "PocketModem is running (pid $($running.Id -join ', ')). Close it and run this again."
 }
 
 # ---------------------------------------------------------------- Windows --
 
 Write-Step "Windows desktop app"
-dotnet publish (Join-Path $root "Cell2Pc.App") `
+dotnet publish (Join-Path $root "windows\PocketModem.App") `
     -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true `
     -o $dist --nologo -v quiet
 Assert-LastExitCode "Windows app publish"
 
 Write-Step "Windows command line"
-dotnet publish (Join-Path $root "Cell2Pc.Cli") `
+dotnet publish (Join-Path $root "windows\PocketModem.Cli") `
     -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true `
     -o $dist --nologo -v quiet
 Assert-LastExitCode "CLI publish"
@@ -75,16 +80,33 @@ if (-not (Test-Path $wintun)) {
 # ------------------------------------------------------------------ Linux --
 
 Write-Step "Linux desktop app"
-dotnet publish (Join-Path $root "Cell2Pc.App") `
+dotnet publish (Join-Path $root "windows\PocketModem.App") `
     -c Release -r linux-x64 --self-contained false -p:PublishSingleFile=true `
     -o $distLinux --nologo -v quiet
 Assert-LastExitCode "Linux app publish"
 
 Write-Step "Linux command line"
-dotnet publish (Join-Path $root "Cell2Pc.Cli") `
+dotnet publish (Join-Path $root "windows\PocketModem.Cli") `
     -c Release -r linux-x64 --self-contained false -p:PublishSingleFile=true `
     -o $distLinux --nologo -v quiet
 Assert-LastExitCode "Linux CLI publish"
+
+# ---------------------------------------------------------------- Android --
+
+if (-not $SkipAndroid) {
+    Write-Step "Android APK"
+    Push-Location (Join-Path $root "android")
+    try {
+        & .\gradlew.bat assembleRelease --no-daemon -q
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  release build failed; falling back to debug" -ForegroundColor Yellow
+            & .\gradlew.bat assembleDebug --no-daemon -q
+            Assert-LastExitCode "Android build"
+        }
+    } finally {
+        Pop-Location
+    }
+}
 
 # ---------------------------------------------------------------- Signing --
 
@@ -100,7 +122,7 @@ if ($CertificatePath) {
     $plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
         [Runtime.InteropServices.Marshal]::SecureStringToBSTR($CertificatePassword))
 
-    foreach ($exe in @("Cell2Pc-Desktop.exe", "cell2pc.exe")) {
+    foreach ($exe in @("PocketModem-Desktop.exe", "pocketmodem.exe")) {
         & $signtool.FullName sign /f $CertificatePath /p $plain `
             /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
             (Join-Path $dist $exe)
@@ -124,11 +146,11 @@ if (-not $iscc) {
     Write-Host "  Inno Setup 6 not found; skipping the installer." -ForegroundColor Yellow
     Write-Host "  Install it from https://jrsoftware.org/isdl.php to build one." -ForegroundColor Yellow
 } else {
-    & $iscc "/DAppVersion=$Version" (Join-Path $PSScriptRoot "cell2pc.iss")
+    & $iscc "/DAppVersion=$Version" (Join-Path $PSScriptRoot "pocketmodem.iss")
     Assert-LastExitCode "installer build"
 
     if ($CertificatePath) {
-        $setup = Join-Path $PSScriptRoot "output\Cell2Pc-Setup-$Version.exe"
+        $setup = Join-Path $PSScriptRoot "output\PocketModem-Setup-$Version.exe"
         $plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
             [Runtime.InteropServices.Marshal]::SecureStringToBSTR($CertificatePassword))
         & $signtool.FullName sign /f $CertificatePath /p $plain `
@@ -140,7 +162,7 @@ if (-not $iscc) {
 # ------------------------------------------------------------- Linux tar --
 
 Write-Step "Linux archive"
-$tarball = Join-Path $PSScriptRoot "output\cell2pc-$Version-linux-x64.tar.gz"
+$tarball = Join-Path $PSScriptRoot "output\pocketmodem-$Version-linux-x64.tar.gz"
 New-Item -ItemType Directory -Force -Path (Split-Path $tarball) | Out-Null
 tar -czf $tarball -C $distLinux .
 Assert-LastExitCode "tar"

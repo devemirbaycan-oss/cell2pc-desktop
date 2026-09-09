@@ -20,14 +20,33 @@ $root = Split-Path -Parent $PSScriptRoot
 $failed = @()
 
 Write-Host ""
-Write-Host "Cell2Pc tests" -ForegroundColor White
+Write-Host "PocketModem tests" -ForegroundColor White
 
 # ------------------------------------------------------------------- C# --
 
 Write-Host ""
 Write-Host "==> Desktop (C#)" -ForegroundColor Cyan
-dotnet test (Join-Path $root "Cell2Pc.Tests") --nologo -v quiet
+dotnet test (Join-Path $root "windows\PocketModem.Tests") --nologo -v quiet
 if ($LASTEXITCODE -ne 0) { $failed += "C#" }
+
+# --------------------------------------------------------------- Kotlin --
+
+if (-not $SkipAndroid) {
+    Write-Host ""
+    Write-Host "==> Phone (Kotlin)" -ForegroundColor Cyan
+    Push-Location (Join-Path $root "android")
+    try {
+        & .\gradlew.bat testDebugUnitTest --no-daemon -q
+        if ($LASTEXITCODE -ne 0) {
+            $failed += "Kotlin"
+            Write-Host "  report: android\app\build\reports\tests\testDebugUnitTest\index.html" -ForegroundColor Yellow
+        } else {
+            Write-Host "  passed" -ForegroundColor Green
+        }
+    } finally {
+        Pop-Location
+    }
+}
 
 # ----------------------------------------------------------------- done --
 

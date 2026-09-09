@@ -1,88 +1,174 @@
-# Cell2Pc Desktop
+# PocketModem
 
-The desktop client for [Cell2Pc](https://github.com/devemirbaycan-oss/cell2pc) — it shares an Android phone's mobile data with a Windows or Linux PC over Wi-Fi Direct.
+Your PC on the phone's mobile data, over Wi-Fi Direct — no root, no system hotspot.
 
-This repository is the client half, published under MIT. It creates a virtual network adapter and changes your machine's routing, which is a lot of trust to ask for on faith — so the code that does it is here to read.
-
-The Android app is closed source.
+All PC traffic leaves the phone as the app's own ordinary socket traffic, because the app really does open every connection itself. There is no forwarded packet and no tethering stack involved, so the carrier sees one app on one phone. See [docs/DESIGN.md](docs/DESIGN.md) for the architecture and [docs/RESULTS.md](docs/RESULTS.md) for measurements.
 
 ---
 
-## What this half does
+## What it does
 
 ```
-your applications
-      |
-virtual network adapter        <- Wintun (Windows) or /dev/net/tun (Linux)
-      |
-tunnel client                  <- classifies packets, multiplexes streams
-      |
-  Wi-Fi Direct
-      |
-  Android app                  <- opens its own cellular sockets
+Windows / Linux                          Android
+  applications                             PocketModem app
+      |                                        |
+  virtual network adapter                 opens its own sockets
+      |                                        |
+      +------ Wi-Fi Direct or USB -------------+
+                                               |
+                                          cellular data
+                                               |
+                                           Internet
 ```
 
-The PC's packets stop at the phone. The phone opens ordinary sockets of its own on the cellular interface and copies bytes between the two, so the traffic leaving it is that app's own traffic. That is the whole design, and it is why no root and no tethering stack are involved.
+Every application works with no configuration — browsers, Steam, Windows Update, games. There is no proxy to set and nothing per-app.
+
+## Status
+
+| Component | State |
+|---|---|
+| Wi-Fi Direct transport (forced group owner, 5 GHz preferred) | Working |
+| USB transport | Working |
+| Userspace TCP/UDP NAT bound to cellular | Working |
+| DNS interception and cache | Working |
+| Virtual adapter + routing (Wintun / tun) | Working |
+| Four parallel links (head-of-line blocking) | Working |
+| Automatic reconnect | Written, lightly tested |
+| Pairing code + AES-GCM frame encryption | Working |
+| Desktop app (Windows, Linux) | Working |
+| Command line | Working |
+| IPv6 end to end | Working |
+
+Measured on a Galaxy A53 over LTE: 156 Mbps down / 101 Mbps up on the link at 1.7 ms, comfortably above the cellular connection it carries.
+
+## Installing
+
+**Windows** — run `PocketModem-Setup-1.0.0.exe`.
+
+The installer is not code-signed, so Windows SmartScreen will say it does not
+recognise it. That is a statement about the certificate, not the software:
+choose **More info** then **Run anyway**. Everything needed is bundled,
+including the Wintun driver.
+
+**Linux** — extract `pocketmodem-1.0.0-linux-x64.tar.gz` and run `./PocketModem-Desktop`
+or `sudo ./pocketmodem`. Requires root or CAP_NET_ADMIN to create the tun
+interface, and NetworkManager to join the phone's Wi-Fi automatically.
+
+**Android** — install the APK from `android/app/build/outputs/apk/`.
+
+## Using it
+
+**On the phone**
+
+1. Open PocketModem and tap **Wi-Fi Direct**
+2. Note the **pairing code** and the **Wi-Fi passphrase**
+
+**On the PC**
+
+Run `PocketModem.exe` (Windows) or `./PocketModem` (Linux), enter the pairing code, and press Connect. It joins the phone's network itself and asks for elevation only when connecting — creating a network interface is privileged.
+
+Or from a terminal:
+
+```sh
+pocketmodem                       # prompts for the pairing code
+pocketmodem -t k7m2xq4p           # with a known code
+pocketmodem connect --for 2h      # disconnect automatically after two hours
+pocketmodem status                # is a tunnel running?
+pocketmodem doctor                # work out why it will not connect
+pocketmodem recover               # restore routing after a crash
+```
+
+`pocketmodem --help` lists everything; `--json` makes any command scriptable.
+
+### If the PC loses internet
+
+Routing changes are journalled to disk before they are applied and replayed on the next start, so a crash should recover on its own. If it does not:
+
+```sh
+pocketmodem recover               # or: FIX-MY-INTERNET.bat / ./fix-my-internet.sh
+```
+
+Disabling and re-enabling the Wi-Fi adapter also clears everything.
+
+## Security
+
+The Wi-Fi group is WPA2, but a group passphrase is shared with every device that ever paired, so it is not a session secret. Two further layers:
+
+- **Pairing code** — the phone rejects any client that does not present it, so joining the Wi-Fi does not by itself grant use of the connection.
+- **AES-GCM** — every tunnel frame is sealed with a key derived from that code, so traffic is unreadable to anything else on the link.
+
+## Testing
+
+```powershell
+packaging	est.ps1                # both suites
+packaging	est.ps1 -SkipAndroid   # C# only, much faster
+```
+
+The protocol and the crypto are implemented once per language, so they can only
+be kept in agreement by pinning the same bytes on both sides. Running one suite
+alone is misleading: a change that breaks the pairing passes on the side it was
+made and fails on the other.
+
+## Releasing
+
+```powershell
+packaging\build-release.ps1                 # everything
+packaging\build-release.ps1 -SkipAndroid    # desktop only, much faster
+```
+
+Produces the Windows installer and the Linux archive in `packaging/output/`.
+Signing is a parameter away when a certificate exists:
+
+```powershell
+packaging\build-release.ps1 -CertificatePath cert.pfx -CertificatePassword (Read-Host -AsSecureString)
+```
+
+Building the installer needs [Inno Setup 6](https://jrsoftware.org/isdl.php);
+without it the script builds everything else and says so.
+
+## Building
+
+Requires JDK 17, the Android SDK (platform 36), and the .NET 9 SDK.
+
+```sh
+# Phone
+cd android
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# Windows
+cd windows/PocketModem.App && dotnet publish -c Release -r win-x64 -o ../../dist
+# Wintun (amd64) from https://www.wintun.net must sit next to the exe.
+
+# Linux
+cd windows/PocketModem.App && dotnet publish -c Release -r linux-x64 -o ../../dist-linux
+```
+
+`android/local.properties` is machine-specific and not committed:
+
+```
+sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
+```
 
 ## Layout
 
 ```
-Cell2Pc.Client/           the tunnel; platform pieces behind interfaces
-  Tunnel/                 wire protocol, AES-GCM framing, reconnect ladder
-  Net/                    packet parsing, routing, Wi-Fi joining
-  Wintun/                 P/Invoke over wintun.dll
-  Platform/               the interfaces, and the Linux implementations
-Cell2Pc.App/              Avalonia desktop app (Windows and Linux)
-Cell2Pc.Cli/              command line
-Cell2Pc.Tests/            47 tests
-packaging/                build, test and release scripts
-web/                      the project website, one self-contained file
+docs/
+  DESIGN.md                     architecture and the decisions behind it
+  RESULTS.md                    measurements, and what was actually slow
+android/                        Kotlin + Compose, the phone side
+  app/src/main/java/dev/pocketmodem/
+    tunnel/P2pTransport.kt      Wi-Fi Direct group, forced group owner
+    tunnel/TunnelServer.kt      framing, parallel links, stream demux
+    tunnel/StreamRelay.kt       one real cellular socket per stream
+    tunnel/UdpNat.kt            UDP flows, so DNS/QUIC/games work
+    tunnel/DnsCache.kt          DNS interception and caching
+    tunnel/UpstreamBinder.kt    pins every socket to cellular
+    tunnel/Crypto.kt            AES-GCM frame encryption
+    service/                    foreground service, wake lock, tile
+windows/                        C#, the desktop side (Windows and Linux)
+  PocketModem.Client/               the tunnel; platform pieces behind interfaces
+  PocketModem.App/                  Avalonia desktop app
+  PocketModem.Cli/                  command line
+dist/ dist-linux/               published binaries and launchers
 ```
-
-## Building
-
-Requires the .NET 9 SDK.
-
-```sh
-dotnet build
-
-# Windows
-dotnet publish Cell2Pc.App -c Release -r win-x64 -o dist
-# Wintun (amd64) from https://www.wintun.net must sit beside the executable.
-
-# Linux
-dotnet publish Cell2Pc.App -c Release -r linux-x64 -o dist-linux
-```
-
-Running the tunnel needs Administrator on Windows, or root/CAP_NET_ADMIN on Linux — creating a network interface and editing the route table are privileged.
-
-## Tests
-
-```sh
-dotnet test Cell2Pc.Tests
-```
-
-They target the failures that actually happened rather than coverage. The pattern in every bug this project has hit is the same: nothing throws, the tunnel connects, the links report healthy, and no traffic moves. Those are cheap for a test to catch and expensive to find in a session.
-
-Note that the protocol and crypto are implemented once per language — the Kotlin half lives in the private repository — so these tests pin the same bytes the phone pins independently. A change that breaks the pairing fails here.
-
-## The protocol
-
-Published as a consequence of open-sourcing this half, and that is fine: the pairing token is the secret, not the format.
-
-```
-+--------+--------+----------+--------+---------+
-| type   | flags  | streamId | length | payload |
-| 1 byte | 1 byte | 4 bytes  | 2 bytes|   ...   |
-+--------+--------+----------+--------+---------+
-```
-
-Big-endian. Four parallel connections carry it, with each stream pinned to one by id — a single connection means one lost Wi-Fi frame stalls every stream behind it, which is felt as an occasional total freeze rather than steady slowness.
-
-Every frame after HELLO is sealed with AES-GCM, keyed `SHA-256("cell2pc-v1" || pairing token)`. HELLO itself is in the clear, because it carries the token the key comes from.
-
-## Licence
-
-MIT. See [LICENSE](LICENSE).
-
-The Android app is separate and proprietary.
