@@ -890,6 +890,26 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
             </article>
 
             <article class="case">
+              <h3>Stop one machine taking it all</h3>
+              <p>
+                Cap the whole connection, or any single computer. The limit
+                lets bursts through at full speed and only holds back sustained
+                transfers, so browsing stays quick while a download is kept to
+                its share — and the phone stays usable.
+              </p>
+            </article>
+
+            <article class="case">
+              <h3>Decide what may connect at all</h3>
+              <p>
+                Every computer is named and listed, and any of them can be
+                blocked on the spot — it drops immediately rather than at its
+                next reconnect. Turn on approval and a new machine waits until
+                you say yes, so the pairing code alone is no longer enough.
+              </p>
+            </article>
+
+            <article class="case">
               <h3>Answer to your own resolver</h3>
               <p>
                 Point DNS at a Pi-hole, a company resolver, or anything else you
@@ -980,6 +1000,16 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
               <td class="us">Yours, including a home resolver</td>
             </tr>
             <tr>
+              <td>Which computers may connect</td>
+              <td>Anyone with the passphrase</td>
+              <td class="us">Approved list, blockable per machine</td>
+            </tr>
+            <tr>
+              <td>Speed limits</td>
+              <td>None</td>
+              <td class="us">Overall, and per computer</td>
+            </tr>
+            <tr>
               <td>Battery</td>
               <td>Access point running constantly</td>
               <td class="us">Same, or charging over USB</td>
@@ -1063,6 +1093,8 @@ footer .mono { font-family: var(--display); font-size: 12px; letter-spacing: 0.5
           <a href="/docs#cli">Command line</a>
           <a href="/docs#split">Choosing what uses mobile data</a>
           <a href="/docs#service">Running without logging in</a>
+          <a href="/docs#devices">Which computers may connect</a>
+          <a href="/docs#limits">Speed limits</a>
           <a href="/docs#dns">DNS</a>
           <a href="/docs#fix">When it breaks</a>
           <a href="/docs#how">How it works</a>
@@ -1140,6 +1172,38 @@ cell2pc uninstall-service</code></pre>
             the service definition rather than separately, so removing the
             service removes the credential with it. Uninstalling also restores
             normal routing.
+          </p>
+
+          <h2 id="devices">Which computers may connect</h2>
+          <p>
+            Every PC that connects is listed on the phone, with a name you can
+            change. Block one and it drops immediately rather than at its next
+            reconnect. Turn on <b>Approval required</b> and a machine that has
+            never connected waits until you allow it, so someone who reads the
+            pairing code off your screen still cannot get in.
+          </p>
+          <div class="note">
+            A router calls this MAC filtering, and it is worth being exact.
+            Android offers no way to refuse a device at the Wi-Fi Direct radio,
+            so a blocked machine can still join the group — it just cannot use
+            the connection, because every PC identifies itself before anything
+            is relayed. The identity used is the pairing, not the MAC, since
+            Android randomises the device address between sessions and a filter
+            keyed on it would forget your laptop every time it reconnected.
+          </div>
+
+          <h2 id="limits">Speed limits</h2>
+          <p>
+            Cap the connection as a whole, or any single computer, in Mbps. The
+            limit holds one second of capacity, so a page load bursts through at
+            full speed and only sustained transfers are slowed — a limited link
+            feels slow rather than broken.
+          </p>
+          <p>
+            Traffic over the limit is delayed rather than dropped, which lets
+            the sender upstream slow down on its own instead of retransmitting.
+            Limits apply to new data at once; a transfer already running slows
+            rather than failing.
           </p>
 
           <h2 id="dns">DNS</h2>
