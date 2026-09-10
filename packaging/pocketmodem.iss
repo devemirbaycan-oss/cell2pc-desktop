@@ -37,6 +37,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 ; creates at runtime.
 PrivilegesRequired=admin
 
+; The wizard icon and the entry in Add/Remove Programs.
+SetupIconFile=..\windows\PocketModem.App\Assets\pocketmodem.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 LicenseFile=..\LICENSE.txt
 InfoBeforeFile=before-install.txt

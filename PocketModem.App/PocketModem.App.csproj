@@ -8,6 +8,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>PocketModem-Desktop</AssemblyName>
+    <!-- Embedded in the exe: Explorer, the taskbar and the installer
+         all read this, and without it Windows shows a blank default. -->
+    <ApplicationIcon>Assets\pocketmodem.ico</ApplicationIcon>
     <RootNamespace>PocketModem.App</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <InvariantGlobalization>true</InvariantGlobalization>
@@ -23,6 +26,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PocketModem.Client\PocketModem.Client.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <!-- Avalonia's Window.Icon needs a bitmap rather than an .ico. -->
+    <AvaloniaResource Include="Assets\pocketmodem.png" />
   </ItemGroup>
 
 </Project>
